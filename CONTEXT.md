@@ -72,8 +72,16 @@ _Avoid_: Node, block
 A Module's physical page and grid position on ZOIA. It is preserved when known but may remain unassigned in an authored Patch Document until compilation.
 _Avoid_: Graph position, canvas position
 
+**Workspace Layout**:
+Optional presentation metadata describing where Modules appear on the editor canvas. It travels in Patch Document extension metadata, remains independent of Hardware Placement, and has no effect on compilation.
+_Avoid_: Hardware layout, ZOIA grid position
+
+**Module Endpoint**:
+A typed input or output attachment point on a Module. An input Endpoint is presented as an inlet and an output Endpoint as an outlet; users create a Connection by dragging from a compatible outlet to an inlet.
+_Avoid_: React Flow handle, generic port
+
 **Connection**:
-A directed routing relationship from one Module endpoint to another.
+A directed routing relationship from one Module Endpoint to another.
 _Avoid_: Wire, edge, link
 
 **Audio Signal Flow**:
@@ -91,6 +99,10 @@ _Avoid_: Arbitrary wiring, advanced Signal Chain
 **Module Inspector**:
 The detailed representation of a selected Module, including its identity, type, parameters, values, and Connections.
 _Avoid_: Node inspector, properties panel
+
+**Connection Inspector**:
+The focused representation of one selected Connection, including its source and target Module Endpoints, signal kind, strength, Target Range, and applicable calibration controls.
+_Avoid_: Edge inspector, wire properties
 
 **Control Source**:
 Any Module endpoint that emits CV and can drive a target CV input, including UI Buttons, Values, LFOs, and MIDI-derived controls.

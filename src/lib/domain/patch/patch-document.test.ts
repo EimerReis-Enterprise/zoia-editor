@@ -12,10 +12,17 @@ import {
   removePatchDocumentConnection,
   patchDocumentFromDraft,
   projectPatchDocument,
+  reconnectPatchDocumentConnection,
   setPatchDocumentControlMappingRange,
 } from './patch-document'
 import { serializePatchDocument } from './patch'
 import type { ModuleCatalogEntry } from './patch-draft'
+import {
+  samePatchSemantics,
+  setModuleWorkspacePosition,
+  setWorkspaceLayout,
+  workspaceLayout,
+} from './workspace-layout'
 
 const gain: ModuleCatalogEntry = {
   id: 'vca',
@@ -142,6 +149,65 @@ describe('Patch Document', () => {
       targetEndpointId: 'audio_in',
       kind: 'audio',
     })
+  })
+
+  it('reconnects one endpoint atomically while preserving Connection identity', async () => {
+    const catalog = await getModuleCatalog()
+    const document = createAdvancedPatchDocument('Reconnect', catalog)
+    const source = document.modules[0]
+    const target = document.modules[1]
+    const sourceEndpoint = source.endpoints.find(
+      (endpoint) => endpoint.kind === 'audioOutput',
+    )!
+    const targetEndpoints = target.endpoints.filter(
+      (endpoint) => endpoint.kind === 'audioInput',
+    )
+    const connected = connectPatchDocumentEndpoints(
+      document,
+      source.id,
+      sourceEndpoint.id,
+      target.id,
+      targetEndpoints[0].id,
+    )
+    const connection = connected.connections.at(-1)!
+    const reconnected = reconnectPatchDocumentConnection(
+      connected,
+      connection.id,
+      source.id,
+      sourceEndpoint.id,
+      target.id,
+      targetEndpoints.at(-1)!.id,
+    )
+
+    expect(reconnected.connections.at(-1)).toMatchObject({
+      id: connection.id,
+      strengthRaw: connection.strengthRaw,
+      targetEndpointId: targetEndpoints.at(-1)!.id,
+    })
+  })
+
+  it('persists Workspace Layout without changing Patch semantics', () => {
+    const document = patchDocumentFromDraft(
+      createMonoPatchDraft('Workspace'),
+      [],
+    )
+    const positioned = setModuleWorkspacePosition(document, 'draft-input', {
+      x: -120.5,
+      y: 84,
+    })
+    const reset = setWorkspaceLayout(positioned, {
+      'draft-input': { x: 10, y: 20 },
+      missing: { x: 99, y: 99 },
+    })
+
+    expect(workspaceLayout(positioned)['draft-input']).toEqual({
+      x: -120.5,
+      y: 84,
+    })
+    expect(workspaceLayout(reset)).toEqual({
+      'draft-input': { x: 10, y: 20 },
+    })
+    expect(samePatchSemantics(document, positioned)).toBe(true)
   })
 
   it('rejects dangling logical references', () => {

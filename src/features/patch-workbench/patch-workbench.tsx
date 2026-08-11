@@ -41,7 +41,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, DragEvent, FormEvent } from 'react'
 
 import {
-  canReorderDraftModules,
   compilePatchDocument,
   filterModuleCatalog,
   getModuleCatalog,
@@ -51,14 +50,16 @@ import {
   resolveExperimentalModuleCatalogEntry,
   savePatchDraftSession,
   serializePatchDocument,
+  sourceCalibrationFullScaleValue,
+  workspaceLayout,
 } from '#/lib/domain/patch'
 import type { PatchDraftSession } from '#/lib/domain/patch'
 
+import { ConnectionInspector } from './connection-inspector'
 import { demoPatch } from './demo-patch'
 import { layoutPatch } from './graph-layout'
 import { ModuleInspector } from './module-inspector'
 import { ModuleNode } from './module-node'
-import { nodeDropTarget } from './node-reorder'
 import { SignalEdge } from './signal-edge'
 import { useWorkbenchStore } from './workbench-store'
 
@@ -92,7 +93,10 @@ function PatchWorkbenchSurface() {
   const [dismissedValidationKey, setDismissedValidationKey] = useState<
     string | null
   >(null)
-  const [dragTargetConnectionId, setDragTargetConnectionId] = useState<
+  const [selectedConnectionId, setSelectedConnectionId] = useState<
+    string | null
+  >(null)
+  const [inspectedConnectionId, setInspectedConnectionId] = useState<
     string | null
   >(null)
   const { fitView } = useReactFlow()
@@ -134,7 +138,11 @@ function PatchWorkbenchSurface() {
     insertModule,
     addModule,
     connectEndpoints,
+    reconnectEndpoints,
+    setWorkspacePosition,
+    resetWorkspaceLayout,
     createControlMapping,
+    setConnectionStrength,
     setControlMappingRange,
     setSourceCalibration,
     removeConnection,
@@ -142,7 +150,6 @@ function PatchWorkbenchSurface() {
     setModuleColor,
     setModuleConfiguration,
     removeModule,
-    reorderModules,
     selectModule,
     setImporting,
     setImportError,
@@ -157,9 +164,12 @@ function PatchWorkbenchSurface() {
     clearToast,
     toggleTheme,
   } = useWorkbenchStore()
+  const patchDocumentRef = useRef(patchDocument)
+  patchDocumentRef.current = patchDocument
   const hasAuthoring = Boolean(patchDocument)
   const isFreeAuthoring = patchDocument?.authoringMode === 'free'
-  const canEditConnections = Boolean(patchDraft)
+  const canInsertModules = Boolean(patchDraft)
+  const canConnectEndpoints = Boolean(isFreeAuthoring)
   const sourceEndpoints = useMemo(
     () =>
       patchDocument?.modules.flatMap((module) =>
@@ -200,22 +210,31 @@ function PatchWorkbenchSurface() {
     () =>
       patch
         ? layoutPatch(patch, signalColor, {
-            canEditConnections,
+            canConnectEndpoints,
+            canInsertModules,
+            patchDocument,
+            workspaceLayout: patchDocument
+              ? workspaceLayout(patchDocument)
+              : undefined,
             onInsertConnection: openModuleLibraryForConnection,
           })
         : null,
-    [canEditConnections, openModuleLibraryForConnection, patch, signalColor],
+    [
+      canConnectEndpoints,
+      canInsertModules,
+      openModuleLibraryForConnection,
+      patch,
+      patchDocument,
+      signalColor,
+    ],
   )
   const displayedEdges = useMemo(
     () =>
       graph?.edges.map((edge) => ({
         ...edge,
-        data: {
-          ...edge.data,
-          isDropTarget: edge.id === dragTargetConnectionId,
-        },
+        selected: edge.id === selectedConnectionId,
       })) ?? [],
-    [dragTargetConnectionId, graph],
+    [graph, selectedConnectionId],
   )
   useEffect(() => {
     setFlowNodes(graph?.nodes ?? [])
@@ -286,13 +305,14 @@ function PatchWorkbenchSurface() {
   }, [draftRevision, patchDraft, pastDrafts, setImportError])
 
   useEffect(() => {
-    if (!patchDocument) return
+    const documentForCompilation = patchDocumentRef.current
+    if (!documentForCompilation) return
     const controller = new AbortController()
     const revision = draftRevision
     setCompilationPending(revision)
     const timeout = window.setTimeout(() => {
       void compilePatchDocument(
-        { document: patchDocument, patchRevision: revision },
+        { document: documentForCompilation, patchRevision: revision },
         { signal: controller.signal },
       )
         .then(setCompilation)
@@ -314,7 +334,6 @@ function PatchWorkbenchSurface() {
     }
   }, [
     draftRevision,
-    patchDocument,
     setCompilation,
     setCompilationError,
     setCompilationPending,
@@ -341,6 +360,26 @@ function PatchWorkbenchSurface() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const isTyping =
+        target?.matches('input, textarea, select, [contenteditable="true"]') ??
+        false
+      if (
+        !isTyping &&
+        selectedConnectionId &&
+        (event.key === 'Delete' || event.key === 'Backspace')
+      ) {
+        event.preventDefault()
+        removeConnection(selectedConnectionId)
+        setSelectedConnectionId(null)
+        setInspectedConnectionId(null)
+        return
+      }
+      if (event.key === 'Escape') {
+        setSelectedConnectionId(null)
+        setInspectedConnectionId(null)
+        return
+      }
       if (!(event.metaKey || event.ctrlKey)) return
       if (event.key.toLowerCase() === 'z') {
         event.preventDefault()
@@ -353,7 +392,7 @@ function PatchWorkbenchSurface() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [redo, undo])
+  }, [redo, removeConnection, selectedConnectionId, undo])
 
   const loadFile = async (file: File | undefined) => {
     if (!file) return
@@ -383,80 +422,122 @@ function PatchWorkbenchSurface() {
     void loadFile(event.dataTransfer.files[0])
   }
 
-  const onNodeClick: NodeMouseHandler = (_event, node) => selectModule(node.id)
-  const findNodeDropTarget = useCallback(
-    (node: Node) => {
-      if (!patchDraft || !graph) return null
-      const centerXByModuleId = Object.fromEntries(
-        graph.nodes.map((graphNode) => [
-          graphNode.id,
-          graphNode.position.x +
-            (graphNode.measured?.width ?? graphNode.width ?? 188) / 2,
-        ]),
-      )
-      return nodeDropTarget(
-        patchDraft.modules.map((module) => module.id),
-        centerXByModuleId,
-        node.id,
-        node.position.x + (node.measured?.width ?? node.width ?? 188) / 2,
-      )
-    },
-    [graph, patchDraft],
-  )
+  const onNodeClick: NodeMouseHandler = (_event, node) => {
+    setSelectedConnectionId(null)
+    setInspectedConnectionId(null)
+    selectModule(node.id)
+  }
   const onNodeDragStart: OnNodeDrag = () => {
+    setSelectedConnectionId(null)
     selectModule(null)
     setIsLibraryOpen(false)
   }
-  const onNodeDrag: OnNodeDrag = (_event, node) => {
-    const target = findNodeDropTarget(node)
-    const connection = target
-      ? patchDraft?.connections.find(
-          (candidate) =>
-            candidate.sourceModuleId === target.afterModuleId &&
-            candidate.targetModuleId === target.beforeModuleId,
-        )
-      : null
-    setDragTargetConnectionId(connection?.id ?? null)
-  }
   const onNodeDragStop: OnNodeDrag = (_event, node) => {
-    const target = findNodeDropTarget(node)
-    setDragTargetConnectionId(null)
-    if (target) {
-      reorderModules(target.afterModuleId, node.id)
-    } else if (graph) {
-      setFlowNodes(graph.nodes)
-    }
+    setWorkspacePosition(node.id, node.position)
   }
   const onEdgeClick: EdgeMouseHandler = (_event, edge) => {
-    if (!patchDraft) return
-    openModuleLibraryForConnection(edge.id)
+    if (patchDraft) {
+      openModuleLibraryForConnection(edge.id)
+      return
+    }
+    if (isFreeAuthoring) {
+      selectModule(null)
+      setSelectedConnectionId(edge.id)
+    }
+  }
+  const onEdgeDoubleClick: EdgeMouseHandler = (_event, edge) => {
+    if (!patchDocument) return
+    setIsLibraryOpen(false)
+    selectModule(null)
+    setSelectedConnectionId(edge.id)
+    setInspectedConnectionId(edge.id)
   }
   const isValidConnection: IsValidConnection = useCallback(
-    (connection) =>
-      Boolean(
-        patchDraft &&
-        canReorderDraftModules(
-          patchDraft,
-          connection.source,
-          connection.target,
-        ),
-      ),
-    [patchDraft],
+    (connection) => {
+      if (
+        !patchDocument ||
+        !isFreeAuthoring ||
+        !connection.sourceHandle ||
+        !connection.targetHandle ||
+        connection.source === connection.target
+      )
+        return false
+      const source = patchDocument.modules
+        .find((module) => module.id === connection.source)
+        ?.endpoints.find(
+          (endpoint) => endpoint.id === connection.sourceHandle,
+        )
+      const target = patchDocument.modules
+        .find((module) => module.id === connection.target)
+        ?.endpoints.find(
+          (endpoint) => endpoint.id === connection.targetHandle,
+        )
+      return Boolean(
+        (source?.kind === 'audioOutput' && target?.kind === 'audioInput') ||
+          (source?.kind === 'cvOutput' && target?.kind === 'cvInput'),
+      )
+    },
+    [isFreeAuthoring, patchDocument],
   )
   const onConnect = useCallback(
     (connection: Connection) => {
-      if (!patchDraft || !isValidConnection(connection)) return
-      reorderModules(connection.source, connection.target)
+      if (
+        !isValidConnection(connection) ||
+        !connection.sourceHandle ||
+        !connection.targetHandle
+      )
+        return
+      connectEndpoints(
+        connection.source,
+        connection.sourceHandle,
+        connection.target,
+        connection.targetHandle,
+      )
     },
-    [isValidConnection, patchDraft, reorderModules],
+    [connectEndpoints, isValidConnection],
   )
   const onReconnect: OnReconnect = useCallback(
-    (_edge, connection) => {
-      if (!patchDraft || !isValidConnection(connection)) return
-      reorderModules(connection.source, connection.target)
+    (edge, connection) => {
+      if (
+        !isValidConnection(connection) ||
+        !connection.sourceHandle ||
+        !connection.targetHandle
+      )
+        return
+      reconnectEndpoints(
+        edge.id,
+        connection.source,
+        connection.sourceHandle,
+        connection.target,
+        connection.targetHandle,
+      )
     },
-    [isValidConnection, patchDraft, reorderModules],
+    [isValidConnection, reconnectEndpoints],
   )
+
+  const resetLayout = () => {
+    if (!patch || !patchDocument) return
+    const automatic = layoutPatch(patch, signalColor, {
+      canConnectEndpoints,
+      canInsertModules,
+      patchDocument,
+      workspaceLayout: {},
+      onInsertConnection: openModuleLibraryForConnection,
+    })
+    resetWorkspaceLayout(
+      Object.fromEntries(
+        automatic.nodes.map((node) => [node.id, node.position]),
+      ),
+    )
+    window.requestAnimationFrame(() => {
+      void fitView({
+        padding: 0.24,
+        duration: 220,
+        minZoom: 0.72,
+        maxZoom: 1.05,
+      })
+    })
+  }
 
   const openModuleLibrary = () => {
     if (!patchDraft && !isFreeAuthoring) return
@@ -580,10 +661,10 @@ function PatchWorkbenchSurface() {
     Boolean(compilationError || findings.length) &&
     dismissedValidationKey !== validationKey
   const canUndo = patchDraft
-    ? pastDrafts.length > 0
+    ? pastDrafts.length > 0 || pastDocuments.length > 0
     : pastEdits.length > 0 || pastDocuments.length > 0
   const canRedo = patchDraft
-    ? futureDrafts.length > 0
+    ? futureDrafts.length > 0 || futureDocuments.length > 0
     : futureEdits.length > 0 || futureDocuments.length > 0
   const editCount = patchDraft
     ? Math.max(0, patchDraft.modules.length - 2)
@@ -771,6 +852,14 @@ function PatchWorkbenchSurface() {
               <Cable size={15} /> Connect
             </button>
           ) : null}
+          <button
+            className="reset-layout-button"
+            type="button"
+            onClick={resetLayout}
+            title="Apply automatic canvas layout"
+          >
+            <RotateCcw size={15} /> Reset layout
+          </button>
           <label className="module-jump">
             <span>EDIT</span>
             <select
@@ -935,20 +1024,24 @@ function PatchWorkbenchSurface() {
             onNodesChange={onNodesChange}
             onNodeClick={onNodeClick}
             onNodeDragStart={onNodeDragStart}
-            onNodeDrag={onNodeDrag}
             onNodeDragStop={onNodeDragStop}
             onEdgeClick={onEdgeClick}
+            onEdgeDoubleClick={onEdgeDoubleClick}
             onConnect={onConnect}
             onReconnect={onReconnect}
             isValidConnection={isValidConnection}
-            onPaneClick={() => selectModule(null)}
+            onPaneClick={() => {
+              selectModule(null)
+              setSelectedConnectionId(null)
+              setInspectedConnectionId(null)
+            }}
             fitView
             fitViewOptions={{ padding: 0.2, minZoom: 0.72, maxZoom: 1.05 }}
             minZoom={0.25}
             maxZoom={1.8}
-            nodesDraggable={canEditConnections}
-            nodesConnectable={canEditConnections}
-            edgesReconnectable={canEditConnections}
+            nodesDraggable={hasAuthoring}
+            nodesConnectable={canConnectEndpoints}
+            edgesReconnectable={canConnectEndpoints}
             reconnectRadius={18}
             connectionRadius={24}
             elementsSelectable
@@ -1099,6 +1192,38 @@ function PatchWorkbenchSurface() {
           onClose={() => selectModule(null)}
         />
       ) : null}
+
+      {patchDocument && inspectedConnectionId ? (() => {
+        const connection = patchDocument.connections.find(
+          (candidate) => candidate.id === inspectedConnectionId,
+        )
+        if (!connection) return null
+        return (
+          <ConnectionInspector
+            key={`${connection.id}-${connection.strengthRaw}`}
+            document={patchDocument}
+            connection={connection}
+            canEdit={hasAuthoring}
+            sourceFullScaleValue={sourceCalibrationFullScaleValue(
+              patchDocument,
+              connection.sourceModuleId,
+              connection.sourceEndpointId,
+            )}
+            onSetRange={setControlMappingRange}
+            onSetStrength={setConnectionStrength}
+            onSetSourceCalibration={setSourceCalibration}
+            onRemove={(connectionId) => {
+              removeConnection(connectionId)
+              setSelectedConnectionId(null)
+              setInspectedConnectionId(null)
+            }}
+            onClose={() => {
+              setSelectedConnectionId(null)
+              setInspectedConnectionId(null)
+            }}
+          />
+        )
+      })() : null}
 
       {isLibraryOpen && (patchDraft || isFreeAuthoring) ? (
         <aside className="module-library" aria-label="Module library">

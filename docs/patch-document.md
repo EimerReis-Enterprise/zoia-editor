@@ -53,6 +53,22 @@ New Patch ───────────────────────�
 
 `colors` stores one ZOIA color ID per Module in Module order. IDs `1`–`15` match the hardware palette (Blue through Mango). Binary imports also preserve `hardware.headerColorId`; color edits keep both representations aligned so JSON and compiled binaries show the same Module color.
 
+## Workspace Layout
+
+Optional canvas positions are stored under the `zoia-editor.workspaceLayout.v1` extension as a `positions` object keyed by Module ID. Workspace Layout is portable presentation metadata: it is independent of Hardware Placement, ignored by compilation, and does not invalidate exact export of an otherwise unchanged binary import. Selection, viewport zoom, and pan remain transient.
+
+```json
+{
+  "extensions": {
+    "zoia-editor.workspaceLayout.v1": {
+      "positions": {
+        "module-0": { "x": 120, "y": 240 }
+      }
+    }
+  }
+}
+```
+
 ## Control Mappings
 
 A Control Mapping is a CV Connection in an authored Free Routing Patch Document. Its target Module parameter stores the mapping minimum Raw Parameter Value; `connection.strengthRaw` stores the span from that minimum to its maximum. The editor exposes this as a range in the Control Source’s Module Inspector and permits one newly authored mapping per target CV input. Existing Documents with mixed CV sources remain openable and exportable, but are not expanded by the mapping editor.

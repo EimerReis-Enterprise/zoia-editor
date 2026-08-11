@@ -61,6 +61,7 @@ export type { PatchConnection, PatchModule, PatchProjection } from './patch'
 export {
   addPatchDocumentModule,
   applyParameterEditsToDocument,
+  canConnectPatchDocumentEndpoints,
   connectPatchDocumentEndpoints,
   createAdvancedPatchDocument,
   createPatchDocumentControlMapping,
@@ -68,9 +69,11 @@ export {
   patchDocumentFromDraft,
   patchDocumentToDraft,
   projectPatchDocument,
+  reconnectPatchDocumentConnection,
   renamePatchDocumentModule,
   removePatchDocumentConnection,
   removePatchDocumentModule,
+  setPatchDocumentConnectionStrength,
   setPatchDocumentControlMappingRange,
   setPatchDocumentModuleConfiguration,
 } from './patch-document'
@@ -80,3 +83,11 @@ export type {
   PatchDocumentConnection,
   PatchDocumentModule,
 } from './patch-document'
+export {
+  samePatchSemantics,
+  setModuleWorkspacePosition,
+  setWorkspaceLayout,
+  workspaceLayout,
+  WORKSPACE_LAYOUT_EXTENSION_KEY,
+} from './workspace-layout'
+export type { WorkspaceLayout, WorkspacePosition } from './workspace-layout'

@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 
 export type SignalEdgeData = {
   canInsert: boolean
-  isDropTarget?: boolean
+  connectionKind?: 'audio' | 'cv' | 'midi' | 'unknown'
   sourceName: string
   targetName: string
   onInsert: (connectionId: string) => void
@@ -27,6 +27,7 @@ export function SignalEdge({
   targetPosition,
   markerEnd,
   selected,
+  style,
   data,
 }: EdgeProps<SignalEdgeType>) {
   const [isHovered, setIsHovered] = useState(false)
@@ -61,20 +62,21 @@ export function SignalEdge({
         id={id}
         path={edgePath}
         markerEnd={markerEnd}
-        className={`signal-edge__path ${data?.isDropTarget ? 'is-drop-target' : ''}`}
+        style={style}
+        className={`signal-edge__path signal-edge__path--${data?.connectionKind ?? 'unknown'} ${selected ? 'is-selected' : ''}`}
+      />
+      <path
+        d={edgePath}
+        className="signal-edge__hit-area"
+        onPointerEnter={data?.canInsert ? showInsertControl : undefined}
+        onPointerLeave={data?.canInsert ? scheduleHideInsertControl : undefined}
       />
       {data?.canInsert ? (
         <>
-          <path
-            d={edgePath}
-            className="signal-edge__hit-area"
-            onPointerEnter={showInsertControl}
-            onPointerLeave={scheduleHideInsertControl}
-          />
           <EdgeLabelRenderer>
             <button
               type="button"
-              className={`signal-edge__insert nodrag nopan ${isHovered || selected || data.isDropTarget ? 'is-visible' : ''} ${data.isDropTarget ? 'is-drop-target' : ''}`}
+              className={`signal-edge__insert nodrag nopan ${isHovered || selected ? 'is-visible' : ''}`}
               style={{
                 transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
               }}

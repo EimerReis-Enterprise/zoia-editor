@@ -12,6 +12,7 @@ import {
   patchDocumentToDraft,
   projectPatchDocument,
   projectPatchDraft,
+  reconnectPatchDocumentConnection,
   renamePatchDocumentModule,
   removeDraftModule,
   removePatchDocumentConnection,
@@ -19,10 +20,15 @@ import {
   reorderDraftModules,
   setDraftModuleColor,
   setDraftParameter,
+  setPatchDocumentConnectionStrength,
   setPatchDocumentControlMappingRange,
   setPatchDocumentModuleColor,
   setPatchDocumentModuleConfiguration,
   setSourceCalibrationFullScaleValue,
+  setModuleWorkspacePosition,
+  setWorkspaceLayout,
+  samePatchSemantics,
+  workspaceLayout,
   withParameterEdit,
 } from '#/lib/domain/patch'
 import type {
@@ -33,6 +39,8 @@ import type {
   PatchDocument,
   PatchDraft,
   PatchProjection,
+  WorkspaceLayout,
+  WorkspacePosition,
   ZoiaModuleColorId,
 } from '#/lib/domain/patch'
 
@@ -106,7 +114,20 @@ type WorkbenchState = {
     targetModuleId: string,
     targetEndpointId: string,
   ) => void
+  reconnectEndpoints: (
+    connectionId: string,
+    sourceModuleId: string,
+    sourceEndpointId: string,
+    targetModuleId: string,
+    targetEndpointId: string,
+  ) => void
+  setWorkspacePosition: (
+    moduleId: string,
+    position: WorkspacePosition,
+  ) => void
+  resetWorkspaceLayout: (positions: WorkspaceLayout) => void
   createControlMapping: (mapping: ControlMappingInput) => void
+  setConnectionStrength: (connectionId: string, strengthRaw: number) => void
   setControlMappingRange: (
     connectionId: string,
     minimumRaw: number,
@@ -414,6 +435,79 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
         compilationError: null,
       }
     }),
+  reconnectEndpoints: (
+    connectionId,
+    sourceModuleId,
+    sourceEndpointId,
+    targetModuleId,
+    targetEndpointId,
+  ) =>
+    set((state) => {
+      if (!state.patchDocument || state.patchDocument.authoringMode !== 'free')
+        return state
+      const patchDocument = reconnectPatchDocumentConnection(
+        state.patchDocument,
+        connectionId,
+        sourceModuleId,
+        sourceEndpointId,
+        targetModuleId,
+        targetEndpointId,
+      )
+      if (patchDocument === state.patchDocument) return state
+      return {
+        patchDocument,
+        basePatchDocument: patchDocument,
+        patch: projectPatchDocument(patchDocument),
+        pastDocuments: [...state.pastDocuments.slice(-99), state.patchDocument],
+        futureDocuments: [],
+        parameterEdits: [],
+        pastEdits: [],
+        futureEdits: [],
+        draftRevision: state.draftRevision + 1,
+        compilationStatus: 'pending',
+        compilation: null,
+        compilationError: null,
+      }
+    }),
+  setWorkspacePosition: (moduleId, position) =>
+    set((state) => {
+      if (!state.patchDocument) return state
+      const currentPosition = workspaceLayout(state.patchDocument)[moduleId]
+      if (
+        currentPosition &&
+        currentPosition.x === position.x &&
+        currentPosition.y === position.y
+      )
+        return state
+      const patchDocument = setModuleWorkspacePosition(
+        state.patchDocument,
+        moduleId,
+        position,
+      )
+      if (patchDocument === state.patchDocument) return state
+      return {
+        patchDocument,
+        basePatchDocument: patchDocument,
+        pastDocuments: [...state.pastDocuments.slice(-99), state.patchDocument],
+        futureDocuments: [],
+      }
+    }),
+  resetWorkspaceLayout: (positions) =>
+    set((state) => {
+      if (!state.patchDocument) return state
+      const patchDocument = setWorkspaceLayout(state.patchDocument, positions)
+      if (
+        JSON.stringify(workspaceLayout(state.patchDocument)) ===
+        JSON.stringify(workspaceLayout(patchDocument))
+      )
+        return state
+      return {
+        patchDocument,
+        basePatchDocument: patchDocument,
+        pastDocuments: [...state.pastDocuments.slice(-99), state.patchDocument],
+        futureDocuments: [],
+      }
+    }),
   createControlMapping: (mapping) =>
     set((state) => {
       if (!state.patchDocument || state.patchDocument.authoringMode !== 'free')
@@ -421,6 +515,30 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
       const patchDocument = createPatchDocumentControlMapping(
         state.patchDocument,
         mapping,
+      )
+      if (patchDocument === state.patchDocument) return state
+      return {
+        patchDocument,
+        basePatchDocument: patchDocument,
+        patch: projectPatchDocument(patchDocument),
+        pastDocuments: [...state.pastDocuments.slice(-99), state.patchDocument],
+        futureDocuments: [],
+        parameterEdits: [],
+        pastEdits: [],
+        futureEdits: [],
+        draftRevision: state.draftRevision + 1,
+        compilationStatus: 'pending',
+        compilation: null,
+        compilationError: null,
+      }
+    }),
+  setConnectionStrength: (connectionId, strengthRaw) =>
+    set((state) => {
+      if (!state.patchDocument) return state
+      const patchDocument = setPatchDocumentConnectionStrength(
+        state.patchDocument,
+        connectionId,
+        strengthRaw,
       )
       if (patchDocument === state.patchDocument) return state
       return {
@@ -774,6 +892,23 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
     }),
   undo: () => {
     const state = get()
+    const previousDocument = state.pastDocuments.at(-1)
+    if (
+      state.patchDocument &&
+      previousDocument &&
+      samePatchSemantics(previousDocument, state.patchDocument)
+    ) {
+      set({
+        patchDocument: previousDocument,
+        basePatchDocument: previousDocument,
+        pastDocuments: state.pastDocuments.slice(0, -1),
+        futureDocuments: [state.patchDocument, ...state.futureDocuments].slice(
+          0,
+          100,
+        ),
+      })
+      return
+    }
     if (
       state.patchDocument?.authoringMode === 'free' &&
       state.pastEdits.length === 0 &&
@@ -841,6 +976,20 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   },
   redo: () => {
     const state = get()
+    const nextDocument = state.futureDocuments.at(0)
+    if (
+      state.patchDocument &&
+      nextDocument &&
+      samePatchSemantics(nextDocument, state.patchDocument)
+    ) {
+      set({
+        patchDocument: nextDocument,
+        basePatchDocument: nextDocument,
+        pastDocuments: [...state.pastDocuments.slice(-99), state.patchDocument],
+        futureDocuments: state.futureDocuments.slice(1),
+      })
+      return
+    }
     if (
       state.patchDocument?.authoringMode === 'free' &&
       state.futureEdits.length === 0 &&

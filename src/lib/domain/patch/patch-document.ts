@@ -404,13 +404,14 @@ export function setPatchDocumentModuleConfiguration(
   }
 }
 
-export function connectPatchDocumentEndpoints(
+function connectionEndpointSelection(
   document: PatchDocument,
   sourceModuleId: string,
   sourceEndpointId: string,
   targetModuleId: string,
   targetEndpointId: string,
-): PatchDocument {
+  excludedConnectionId?: string,
+) {
   const sourceModule = document.modules.find(
     (module) => module.id === sourceModuleId,
   )
@@ -430,37 +431,73 @@ export function connectPatchDocumentEndpoints(
     !target ||
     sourceModule.id === targetModule.id
   )
-    return document
+    return null
   const kind =
     source.kind === 'audioOutput' && target.kind === 'audioInput'
-      ? 'audio'
+      ? ('audio' as const)
       : source.kind === 'cvOutput' && target.kind === 'cvInput'
-        ? 'cv'
+        ? ('cv' as const)
         : null
-  if (!kind) return document
-  if (
-    document.connections.some(
-      (connection) =>
-        (connection.sourceModuleId === sourceModuleId &&
-          connection.sourceEndpointId === sourceEndpointId &&
-          connection.targetModuleId === targetModuleId &&
-          connection.targetEndpointId === targetEndpointId) ||
+  if (!kind) return null
+  const conflicts = document.connections.some(
+    (connection) =>
+      connection.id !== excludedConnectionId &&
+      ((connection.sourceModuleId === sourceModuleId &&
+        connection.sourceEndpointId === sourceEndpointId &&
+        connection.targetModuleId === targetModuleId &&
+        connection.targetEndpointId === targetEndpointId) ||
         (kind === 'cv' &&
           connection.kind === 'cv' &&
           connection.targetModuleId === targetModuleId &&
-          connection.targetEndpointId === targetEndpointId),
-    )
+          connection.targetEndpointId === targetEndpointId)),
   )
-    return document
+  return conflicts ? null : { source, target, kind }
+}
+
+export function canConnectPatchDocumentEndpoints(
+  document: PatchDocument,
+  sourceModuleId: string,
+  sourceEndpointId: string,
+  targetModuleId: string,
+  targetEndpointId: string,
+  excludedConnectionId?: string,
+): boolean {
+  return Boolean(
+    connectionEndpointSelection(
+      document,
+      sourceModuleId,
+      sourceEndpointId,
+      targetModuleId,
+      targetEndpointId,
+      excludedConnectionId,
+    ),
+  )
+}
+
+export function connectPatchDocumentEndpoints(
+  document: PatchDocument,
+  sourceModuleId: string,
+  sourceEndpointId: string,
+  targetModuleId: string,
+  targetEndpointId: string,
+): PatchDocument {
+  const selection = connectionEndpointSelection(
+    document,
+    sourceModuleId,
+    sourceEndpointId,
+    targetModuleId,
+    targetEndpointId,
+  )
+  if (!selection) return document
   const connection: PatchDocumentConnection = {
     id: `connection-${document.sequences.nextConnection}`,
     sourceModuleId,
     targetModuleId,
     sourceEndpointId,
     targetEndpointId,
-    sourceEndpoint: source.name,
-    targetEndpoint: target.name,
-    kind,
+    sourceEndpoint: selection.source.name,
+    targetEndpoint: selection.target.name,
+    kind: selection.kind,
     strengthRaw: 10_000,
   }
   return {
@@ -470,6 +507,52 @@ export function connectPatchDocumentEndpoints(
       ...document.sequences,
       nextConnection: document.sequences.nextConnection + 1,
     },
+  }
+}
+
+export function reconnectPatchDocumentConnection(
+  document: PatchDocument,
+  connectionId: string,
+  sourceModuleId: string,
+  sourceEndpointId: string,
+  targetModuleId: string,
+  targetEndpointId: string,
+): PatchDocument {
+  const current = document.connections.find(
+    (connection) => connection.id === connectionId,
+  )
+  const selection = connectionEndpointSelection(
+    document,
+    sourceModuleId,
+    sourceEndpointId,
+    targetModuleId,
+    targetEndpointId,
+    connectionId,
+  )
+  if (!current || !selection) return document
+  if (
+    current.sourceModuleId === sourceModuleId &&
+    current.sourceEndpointId === sourceEndpointId &&
+    current.targetModuleId === targetModuleId &&
+    current.targetEndpointId === targetEndpointId
+  )
+    return document
+  return {
+    ...document,
+    connections: document.connections.map((connection) =>
+      connection.id === connectionId
+        ? {
+            ...connection,
+            sourceModuleId,
+            sourceEndpointId,
+            targetModuleId,
+            targetEndpointId,
+            sourceEndpoint: selection.source.name,
+            targetEndpoint: selection.target.name,
+            kind: selection.kind,
+          }
+        : connection,
+    ),
   }
 }
 
@@ -578,6 +661,29 @@ export function createPatchDocumentControlMapping(
       ...document.sequences,
       nextConnection: document.sequences.nextConnection + 1,
     },
+  }
+}
+
+export function setPatchDocumentConnectionStrength(
+  document: PatchDocument,
+  connectionId: string,
+  strengthRaw: number,
+): PatchDocument {
+  if (
+    !Number.isInteger(strengthRaw) ||
+    strengthRaw < 0 ||
+    strengthRaw > 65_535
+  )
+    return document
+  const connection = document.connections.find(
+    (candidate) => candidate.id === connectionId,
+  )
+  if (!connection || connection.strengthRaw === strengthRaw) return document
+  return {
+    ...document,
+    connections: document.connections.map((candidate) =>
+      candidate.id === connectionId ? { ...candidate, strengthRaw } : candidate,
+    ),
   }
 }
 

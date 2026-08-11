@@ -5,6 +5,7 @@ import {
   getModuleCatalog,
   insertDraftModule,
   patchDocumentFromDraft,
+  workspaceLayout,
 } from '#/lib/domain/patch'
 
 import { demoPatch } from './demo-patch'
@@ -111,6 +112,47 @@ describe('Parameter Edit history', () => {
     expect(
       useWorkbenchStore.getState().patchDocument?.connections,
     ).toHaveLength(2)
+  })
+
+  it('persists and undoes Workspace Layout without compiling a new Patch Revision', () => {
+    useWorkbenchStore.getState().setModuleCatalog([gainModule])
+    useWorkbenchStore.getState().createDraft('Positioned')
+    const revision = useWorkbenchStore.getState().draftRevision
+    useWorkbenchStore.getState().setCompilation({
+      binary: new Uint8Array([0]),
+      outputFilename: 'positioned.bin',
+      findings: [],
+      conformance: {
+        unchangedFieldsPreserved: true,
+        changedParameterCount: 0,
+      },
+      draftRevision: revision,
+    })
+
+    useWorkbenchStore
+      .getState()
+      .setWorkspacePosition('draft-input', { x: 120, y: -40 })
+
+    expect(
+      workspaceLayout(useWorkbenchStore.getState().patchDocument!)[
+        'draft-input'
+      ],
+    ).toEqual({ x: 120, y: -40 })
+    expect(useWorkbenchStore.getState().draftRevision).toBe(revision)
+    expect(useWorkbenchStore.getState().compilationStatus).toBe('valid')
+
+    useWorkbenchStore.getState().undo()
+    expect(
+      workspaceLayout(useWorkbenchStore.getState().patchDocument!),
+    ).toEqual({})
+    expect(useWorkbenchStore.getState().draftRevision).toBe(revision)
+
+    useWorkbenchStore.getState().redo()
+    expect(
+      workspaceLayout(useWorkbenchStore.getState().patchDocument!)[
+        'draft-input'
+      ],
+    ).toEqual({ x: 120, y: -40 })
   })
 
   it('records connector reordering as one undoable Authoring Operation', () => {
