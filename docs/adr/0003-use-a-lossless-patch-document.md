@@ -1,0 +1,3 @@
+# Use one lossless Patch Document for authoring and exchange
+
+A versioned, frontend-owned JSON Patch Document is the canonical representation for binary imports, JSON imports, and newly authored Patches; the visualization remains a derived Patch Projection and the separate Patch Draft model will be retired. Binary imports embed their original bytes and opaque source data so an unchanged Round-trip Export is byte-identical, while edited exports preserve known semantics and opaque data without promising byte identity. Logical Module and endpoint IDs remain independent of hardware indexes, and the Python service becomes a replaceable codec adapter that decodes and compiles Patch Documents rather than owning editor state.

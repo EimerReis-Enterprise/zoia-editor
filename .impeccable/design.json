@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-07T14:43:10Z",
+  "title": "Design System: ZOIA / SCOPE",
+  "extensions": {
+    "colorMeta": {
+      "phosphor": { "role": "primary", "displayName": "Phosphor Trace", "canonical": "#78f0a3", "tonalRamp": ["#0c2a17", "#174726", "#236b39", "#32934f", "#4abb69", "#78f0a3", "#b2f8c8", "#e5ffed"] },
+      "light-phosphor": { "role": "primary", "displayName": "Calibration Green", "canonical": "#137a3b", "tonalRamp": ["#082a14", "#0c4822", "#137a3b", "#249650", "#4bb06d", "#7bca94", "#b7e3c3", "#e7f5ea"] },
+      "light-scope": { "role": "neutral", "displayName": "Calibration Paper", "canonical": "#f3f7f0", "tonalRamp": ["#18231a", "#304034", "#526656", "#7f9282", "#a8b8aa", "#cbd6cb", "#e5ece3", "#f3f7f0"] },
+      "amber": { "role": "secondary", "displayName": "Armed Amber", "canonical": "#e8a94b", "tonalRamp": ["#2b1b08", "#4c3210", "#765019", "#a47227", "#cc9237", "#e8a94b", "#f5cf8c", "#fff1d7"] },
+      "crt-black": { "role": "neutral", "displayName": "CRT Black", "canonical": "#070a08", "tonalRamp": ["#070a08", "#111813", "#1b261e", "#2b3a2f", "#4b5e4f", "#718674", "#aab8ab", "#e4eae4"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Condensed Instrument Display", "purpose": "Empty-state thesis and rare high-scale statements." },
+      "body": { "displayName": "Operational Body", "purpose": "Readable instructions, metadata, and inspector content." },
+      "instrument-label": { "displayName": "Instrument Label", "purpose": "Measurements, identifiers, statuses, and controls." }
+    },
+    "shadows": [
+      { "name": "housing", "value": "0 14px 30px rgba(0,0,0,.62)", "purpose": "Separates the scope housing and inspector from the bench." },
+      { "name": "module", "value": "0 7px 16px rgba(0,0,0,.46)", "purpose": "Keeps modules legible against the graticule." }
+    ],
+    "motion": [
+      { "name": "control-state", "value": "180ms ease", "purpose": "Hover, focus, border, and fill state transitions." }
+    ],
+    "breakpoints": [
+      { "name": "compact-workbench", "value": "820px" },
+      { "name": "small-control-stack", "value": "520px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Instrument Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Starts the primary local action, such as acquiring a patch.",
+      "html": "<button class=\"ds-primary\">ACQUIRE PATCH</button>",
+      "css": ".ds-primary{height:40px;padding:0 18px;border:1px solid #78f0a3;border-radius:5px;background:#78f0a3;color:#070a08;font:700 .72rem ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;transition:background-color 180ms ease,border-color 180ms ease}.ds-primary:hover{background:#a7ffc2;border-color:#a7ffc2}.ds-primary:focus-visible{outline:2px solid #a7ffc2;outline-offset:3px}"
+    },
+    {
+      "name": "Secondary Instrument Button",
+      "kind": "button",
+      "description": "Offers a reversible alternate action without competing with import.",
+      "html": "<button class=\"ds-secondary\">INSPECT DEMO</button>",
+      "css": ".ds-secondary{height:40px;padding:0 18px;border:1px solid #49604e;border-radius:5px;background:#0e1711;color:#c4d3c4;font:700 .72rem ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;transition:background-color 180ms ease,border-color 180ms ease}.ds-secondary:hover{border-color:#76917c;background:#172019}.ds-secondary:focus-visible{outline:2px solid #a7ffc2;outline-offset:3px}"
+    },
+    {
+      "name": "Module Panel",
+      "kind": "custom",
+      "refersTo": "module-panel",
+      "description": "Represents one logical ZOIA module; authored effect panels can be dragged into another Signal Chain gap.",
+      "html": "<div class=\"ds-module\"><i></i><small>M02</small><div><strong>Tape Echo</strong><span>Delay Line</span></div><i></i></div>",
+      "css": ".ds-module{width:188px;height:92px;display:flex;align-items:center;gap:14px;padding:14px 0;border:1px solid #425847;border-radius:5px;background:#111813;color:#dce8da;box-shadow:0 7px 16px rgba(0,0,0,.46)}.ds-module i{width:7px;height:17px;border:1px solid #75bd87;border-radius:2px;background:#0a100c}.ds-module small{color:#8eac91;font:500 .56rem ui-monospace,monospace;letter-spacing:.12em}.ds-module div{display:grid;gap:5px;flex:1}.ds-module strong{font:.86rem ui-sans-serif,sans-serif}.ds-module span{color:#8eac91;font:.68rem ui-sans-serif,sans-serif}"
+    },
+    {
+      "name": "Patch Document Control Rail",
+      "kind": "custom",
+      "description": "Keeps history, insertion, explicit endpoint routing, Module selection, validation, portable JSON saving, and binary export in one compact instrument rail.",
+      "html": "<div class=\"ds-rail\"><button>↶</button><button>+ ADD MODULE</button><button>CONNECT</button><select><option>M01 · VCA</option></select><span>REVISION 4 READY</span><button>SAVE .ZOIA.JSON</button><button>EXPORT .BIN</button></div>",
+      "css": ".ds-rail{display:flex;align-items:center;gap:10px;padding:7px;border:1px solid #344b39;border-radius:5px;background:#0d140f;color:#dce8da;font:600 .64rem ui-monospace,monospace;letter-spacing:.06em}.ds-rail button,.ds-rail select{height:34px;border:1px solid #405347;border-radius:4px;background:#151e17;color:#a7ffc2}.ds-rail button:focus-visible,.ds-rail select:focus-visible{outline:2px solid #a7ffc2;outline-offset:2px}"
+    },
+    {
+      "name": "Raw Parameter Control",
+      "kind": "input",
+      "description": "Pairs continuous exploration with exact unsigned 16-bit entry.",
+      "html": "<label class=\"ds-parameter\"><span>VALUE</span><input type=\"range\" min=\"0\" max=\"65535\" value=\"20000\"><input type=\"number\" min=\"0\" max=\"65535\" value=\"20000\"></label>",
+      "css": ".ds-parameter{display:grid;grid-template-columns:1fr 82px;gap:10px;color:#dce8da;font:.72rem ui-sans-serif,sans-serif}.ds-parameter span{grid-column:1/-1}.ds-parameter input[type=range]{accent-color:#78f0a3}.ds-parameter input[type=number]{height:30px;padding:0 7px;border:1px solid #415347;border-radius:4px;background:#090f0b;color:#a7ffc2;font:.67rem ui-monospace,monospace;text-align:right}.ds-parameter input:focus-visible{outline:2px solid #a7ffc2;outline-offset:2px}"
+    },
+    {
+      "name": "Module Library",
+      "kind": "custom",
+      "description": "Shows one row per Module family with compact buttons for each configured option variant.",
+      "html": "<div class=\"ds-library\"><header><strong>Add a module</strong><small>Choose a configuration, then connect its endpoints.</small></header><input value=\"VCA\"><article><span><strong>VCA</strong><small>Audio</small></span><p>Voltage controlled amplifier.</p><div><button>+ Mono</button><button>+ Stereo</button></div></article></div>",
+      "css": ".ds-library{width:380px;padding:18px;border:1px solid #506354;border-radius:8px;background:#101713;color:#dce8da;box-shadow:-14px 16px 34px rgba(0,0,0,.64);font:.72rem ui-sans-serif,sans-serif}.ds-library header{display:grid;gap:4px;margin-bottom:14px}.ds-library header strong{font-size:1.06rem}.ds-library header small{color:#849688}.ds-library input{width:100%;height:34px;margin-bottom:10px;padding:0 9px;border:1px solid #46594b;border-radius:4px;background:#0a100c;color:#dce8da}.ds-library article{display:grid;grid-template-columns:80px 1fr 74px;align-items:center;gap:10px;padding:12px 0;border-top:1px solid #2d3a31}.ds-library article>span,.ds-library article>div{display:grid;gap:5px}.ds-library article small,.ds-library article p{margin:0;color:#769079;font-size:.58rem}.ds-library button{min-height:28px;border:1px solid #46604d;border-radius:4px;background:#111b14;color:#a7ffc2}.ds-library :focus-visible{outline:2px solid #a7ffc2;outline-offset:2px}"
+    },
+    {
+      "name": "Validation Finding",
+      "kind": "custom",
+      "description": "Floats current validation feedback above the bottom-center canvas without changing workspace geometry.",
+      "html": "<div class=\"ds-validation\"><strong>VALIDATION</strong><span>Experimental export: hardware verification pending.</span><button aria-label=\"Dismiss\">×</button></div>",
+      "css": ".ds-validation{width:620px;display:grid;grid-template-columns:auto 1fr auto;align-items:start;gap:14px;padding:11px 12px;border:1px solid #72522c;border-radius:5px;background:#1d170e;color:#d4bb91;box-shadow:0 10px 26px rgba(0,0,0,.46);font:.7rem ui-sans-serif,sans-serif}.ds-validation strong{color:#e8a94b;font:600 .58rem ui-monospace,monospace;letter-spacing:.12em}.ds-validation button{border:0;background:transparent;color:#b79c76}.ds-validation button:hover{color:#f0d3a8}.ds-validation button:focus-visible{outline:2px solid #a7ffc2;outline-offset:2px}"
+    },
+    {
+      "name": "Editable Signal Connection",
+      "kind": "custom",
+      "description": "Reveals direct insertion at the midpoint while preserving a quiet resting signal trace.",
+      "html": "<div class=\"ds-connection\"><span></span><button aria-label=\"Insert Module\">+</button><span></span></div>",
+      "css": ".ds-connection{width:220px;display:flex;align-items:center;color:#a7ffc2}.ds-connection span{height:2px;flex:1;background:#70d690}.ds-connection button{width:29px;height:29px;display:grid;place-items:center;padding:0;border:1px solid #6a9272;border-radius:50%;background:#101a13;color:#a7ffc2;box-shadow:0 5px 13px rgba(0,0,0,.48);font:500 1rem ui-sans-serif,sans-serif}.ds-connection button:hover{border-color:#78f0a3;background:#1a2a1e}.ds-connection button:focus-visible{outline:2px solid #a7ffc2;outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Signal Bench",
+    "overview": "ZOIA / SCOPE behaves like calibrated studio test equipment rather than a generic developer graph. The graph is the observed signal; physical references remain abstracted into useful hierarchy rather than fake machinery.",
+    "keyCharacteristics": ["Near-black calibrated work surface", "Phosphor reserved for live routing and action", "Compact instrument labels with readable body text", "Structural frames and offset shadows"],
+    "rules": [
+      { "name": "The Live Signal Rule", "body": "Bright green identifies something actionable, selected, or carrying signal; inactive structure stays graphite.", "section": "colors" },
+      { "name": "The Measurement Rule", "body": "Monospace earns its place only for readings, IDs, endpoints, statuses, or controls.", "section": "typography" },
+      { "name": "The Housing Rule", "body": "Surfaces use structural depth and never become soft floating cards.", "section": "elevation" }
+    ],
+    "dos": ["Preserve left-to-right signal direction.", "Use green as semantic signal state.", "Retain pan, zoom, fit-view, focus, and reduced-motion behavior."],
+    "donts": ["Do not reproduce the LED grid as the organizing model.", "Do not add fake knobs or ornamental controls.", "Do not shrink mobile graph labels into illegibility."]
+  }
+}

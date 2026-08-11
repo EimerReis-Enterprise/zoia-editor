@@ -1,0 +1,52 @@
+{
+  "format": "zoia-hardware-verifications",
+  "schemaVersion": 1,
+  "records": [
+    {
+      "configurationId": "value",
+      "parameterKey": "value",
+      "hardwareTarget": "euroburo",
+      "firmwareVersion": "4",
+      "verifiedBy": "Moritz",
+      "id": "c2e0b45b-dcc8-46ac-b1bb-329ea264020a",
+      "verifiedAt": "2026-08-10T14:11:36.309Z"
+    },
+    {
+      "configurationId": "value",
+      "parameterKey": "value",
+      "hardwareTarget": "euroburo",
+      "firmwareVersion": "4",
+      "verifiedBy": "Moritz",
+      "id": "7137b527-289c-471b-91f5-f8491ade5452",
+      "verifiedAt": "2026-08-10T14:11:39.519Z"
+    },
+    {
+      "configurationId": "value",
+      "parameterKey": "value",
+      "hardwareTarget": "euroburo",
+      "firmwareVersion": "4",
+      "verifiedBy": "Moritz",
+      "id": "2effc6ea-363b-4e78-9eb6-fcc726ea5f90",
+      "verifiedAt": "2026-08-10T14:11:45.816Z"
+    },
+    {
+      "configurationId": "value",
+      "parameterKey": "value",
+      "hardwareTarget": "euroburo",
+      "firmwareVersion": "4",
+      "verifiedBy": "Moritz",
+      "notes": "tested on hardware",
+      "id": "e55d694a-3ca2-4154-b832-ed87f8abb9eb",
+      "verifiedAt": "2026-08-10T14:33:18.735Z"
+    },
+    {
+      "configurationId": "value",
+      "hardwareTarget": "euroburo",
+      "firmwareVersion": "4",
+      "verifiedBy": "Moritz",
+      "notes": "tested on hardware",
+      "id": "03e70e70-ff8d-4415-8d8e-e6157da05aa2",
+      "verifiedAt": "2026-08-10T14:33:29.002Z"
+    }
+  ]
+}

@@ -1,0 +1,572 @@
+{
+  "format": "zoia-patch",
+  "schemaVersion": 1,
+  "documentId": "nts4-wash-return-v1",
+  "name": "NTS4 Wash Return",
+  "authoringMode": "free",
+  "modules": [
+    {
+      "id": "audio-in",
+      "configurationId": "audio-input-stereo",
+      "name": "NTS4 Send",
+      "type": "Audio Input",
+      "category": "Interface",
+      "parameters": [],
+      "endpoints": [
+        {
+          "id": "output_L",
+          "key": "output_L",
+          "name": "Output L",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "output_R",
+          "key": "output_R",
+          "name": "Output R",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 1
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "wash-cc",
+      "configurationId": "midi-cc-2",
+      "name": "Wash CC2",
+      "type": "Midi CC In",
+      "category": "Interface",
+      "parameters": [],
+      "endpoints": [
+        {
+          "id": "cc_out",
+          "key": "cc_out",
+          "name": "Cc Out",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 0
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "wash-macro",
+      "configurationId": "value",
+      "name": "Wash Macro",
+      "type": "Value",
+      "category": "CV",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "value",
+          "kind": "parameter",
+          "name": "Value",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "value",
+          "key": "value",
+          "name": "Value",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "cv_output",
+          "key": "cv_output",
+          "name": "Cv Output",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 1
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "wash-sum",
+      "configurationId": "mixer",
+      "name": "Wash Input Sum",
+      "type": "Audio Mixer",
+      "category": "Audio",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "gain_1",
+          "kind": "parameter",
+          "name": "Gain 1",
+          "rawValue": 54394,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "dB",
+          "range": [
+            -100,
+            -70,
+            -40,
+            -10,
+            20
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "gain_2",
+          "kind": "parameter",
+          "name": "Gain 2",
+          "rawValue": 54394,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "dB",
+          "range": [
+            -100,
+            -70,
+            -40,
+            -10,
+            20
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in_1_L",
+          "key": "audio_in_1_L",
+          "name": "Audio In 1 L",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "audio_in_2_L",
+          "key": "audio_in_2_L",
+          "name": "Audio In 2 L",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "gain_1",
+          "key": "gain_1",
+          "name": "Gain 1",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 16
+        },
+        {
+          "id": "gain_2",
+          "key": "gain_2",
+          "name": "Gain 2",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 17
+        },
+        {
+          "id": "audio_out_L",
+          "key": "audio_out_L",
+          "name": "Audio Out L",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 32
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "wash-hpf",
+      "configurationId": "filter-highpass",
+      "name": "Wash HPF",
+      "type": "SV Filter",
+      "category": "Audio",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "frequency",
+          "kind": "parameter",
+          "name": "Frequency",
+          "rawValue": 12000,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "Hz",
+          "range": [
+            27.5,
+            155.56,
+            880,
+            4978,
+            23999
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "resonance",
+          "kind": "parameter",
+          "name": "Resonance",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            1,
+            5.6,
+            31.6,
+            177.8,
+            1000
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in",
+          "key": "audio_in",
+          "name": "Audio In",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "frequency",
+          "key": "frequency",
+          "name": "Frequency",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "resonance",
+          "key": "resonance",
+          "name": "Resonance",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "hipass_output",
+          "key": "hipass_output",
+          "name": "Hipass Output",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 4
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "wash-reverb",
+      "configurationId": "reverb-send-stereo",
+      "name": "Wash Reverb",
+      "type": "Reverb Lite",
+      "category": "Effect",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "decay_time",
+          "kind": "parameter",
+          "name": "Decay Time",
+          "rawValue": 32768,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "s",
+          "range": [
+            0,
+            2.62,
+            4.12,
+            8.6,
+            null
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "mix",
+          "kind": "parameter",
+          "name": "Mix",
+          "rawValue": 65535,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "%",
+          "range": [
+            0,
+            100
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in_L",
+          "key": "audio_in_L",
+          "name": "Audio In L",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "decay_time",
+          "key": "decay_time",
+          "name": "Decay Time",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "mix",
+          "key": "mix",
+          "name": "Mix",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 3
+        },
+        {
+          "id": "audio_out_L",
+          "key": "audio_out_L",
+          "name": "Audio Out L",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 4
+        },
+        {
+          "id": "audio_out_R",
+          "key": "audio_out_R",
+          "name": "Audio Out R",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 5
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "wash-return",
+      "configurationId": "vca-stereo",
+      "name": "Wash Return",
+      "type": "VCA",
+      "category": "Audio",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "level_control",
+          "kind": "parameter",
+          "name": "Level Control",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "dB",
+          "range": [
+            null,
+            -12,
+            -6,
+            -2.5,
+            0
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in_1",
+          "key": "audio_in_1",
+          "name": "Audio In 1",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "audio_in_2",
+          "key": "audio_in_2",
+          "name": "Audio In 2",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "level_control",
+          "key": "level_control",
+          "name": "Level Control",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "audio_out_1",
+          "key": "audio_out_1",
+          "name": "Audio Out 1",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 3
+        },
+        {
+          "id": "audio_out_2",
+          "key": "audio_out_2",
+          "name": "Audio Out 2",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 4
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "audio-out",
+      "configurationId": "audio-output-stereo",
+      "name": "NTS4 Return",
+      "type": "Audio Output",
+      "category": "Interface",
+      "parameters": [],
+      "endpoints": [
+        {
+          "id": "input_L",
+          "key": "input_L",
+          "name": "Input L",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "input_R",
+          "key": "input_R",
+          "name": "Input R",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 1
+        }
+      ],
+      "hardware": null
+    }
+  ],
+  "connections": [
+    {
+      "id": "connection-0",
+      "sourceModuleId": "audio-in",
+      "targetModuleId": "wash-sum",
+      "sourceEndpointId": "output_L",
+      "targetEndpointId": "audio_in_1_L",
+      "sourceEndpoint": "Output L",
+      "targetEndpoint": "Audio In 1 L",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-1",
+      "sourceModuleId": "audio-in",
+      "targetModuleId": "wash-sum",
+      "sourceEndpointId": "output_R",
+      "targetEndpointId": "audio_in_2_L",
+      "sourceEndpoint": "Output R",
+      "targetEndpoint": "Audio In 2 L",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-2",
+      "sourceModuleId": "wash-sum",
+      "targetModuleId": "wash-hpf",
+      "sourceEndpointId": "audio_out_L",
+      "targetEndpointId": "audio_in",
+      "sourceEndpoint": "Audio Out L",
+      "targetEndpoint": "Audio In",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-3",
+      "sourceModuleId": "wash-hpf",
+      "targetModuleId": "wash-reverb",
+      "sourceEndpointId": "hipass_output",
+      "targetEndpointId": "audio_in_L",
+      "sourceEndpoint": "Hipass Output",
+      "targetEndpoint": "Audio In L",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-4",
+      "sourceModuleId": "wash-reverb",
+      "targetModuleId": "wash-return",
+      "sourceEndpointId": "audio_out_L",
+      "targetEndpointId": "audio_in_1",
+      "sourceEndpoint": "Audio Out L",
+      "targetEndpoint": "Audio In 1",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-5",
+      "sourceModuleId": "wash-reverb",
+      "targetModuleId": "wash-return",
+      "sourceEndpointId": "audio_out_R",
+      "targetEndpointId": "audio_in_2",
+      "sourceEndpoint": "Audio Out R",
+      "targetEndpoint": "Audio In 2",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-6",
+      "sourceModuleId": "wash-cc",
+      "targetModuleId": "wash-macro",
+      "sourceEndpointId": "cc_out",
+      "targetEndpointId": "value",
+      "sourceEndpoint": "Cc Out",
+      "targetEndpoint": "Value",
+      "kind": "cv",
+      "strengthRaw": 65535
+    },
+    {
+      "id": "connection-7",
+      "sourceModuleId": "wash-return",
+      "targetModuleId": "audio-out",
+      "sourceEndpointId": "audio_out_1",
+      "targetEndpointId": "input_L",
+      "sourceEndpoint": "Audio Out 1",
+      "targetEndpoint": "Input L",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-8",
+      "sourceModuleId": "wash-return",
+      "targetModuleId": "audio-out",
+      "sourceEndpointId": "audio_out_2",
+      "targetEndpointId": "input_R",
+      "sourceEndpoint": "Audio Out 2",
+      "targetEndpoint": "Input R",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-9",
+      "sourceModuleId": "wash-macro",
+      "targetModuleId": "wash-hpf",
+      "sourceEndpointId": "cv_output",
+      "targetEndpointId": "frequency",
+      "sourceEndpoint": "Cv Output",
+      "targetEndpoint": "Frequency",
+      "kind": "cv",
+      "strengthRaw": 22000
+    },
+    {
+      "id": "connection-10",
+      "sourceModuleId": "wash-macro",
+      "targetModuleId": "wash-reverb",
+      "sourceEndpointId": "cv_output",
+      "targetEndpointId": "decay_time",
+      "sourceEndpoint": "Cv Output",
+      "targetEndpoint": "Decay Time",
+      "kind": "cv",
+      "strengthRaw": 16383
+    },
+    {
+      "id": "connection-11",
+      "sourceModuleId": "wash-macro",
+      "targetModuleId": "wash-return",
+      "sourceEndpointId": "cv_output",
+      "targetEndpointId": "level_control",
+      "sourceEndpoint": "Cv Output",
+      "targetEndpoint": "Level Control",
+      "kind": "cv",
+      "strengthRaw": 32768
+    }
+  ],
+  "pages": [],
+  "starred": [],
+  "colors": [
+    2,
+    2,
+    3,
+    1,
+    1,
+    1,
+    3,
+    2
+  ],
+  "source": null,
+  "opaque": {},
+  "sequences": {
+    "nextModule": 8,
+    "nextConnection": 12
+  },
+  "annotations": {
+    "architecture": "100% wet mono-to-stereo reverb return for an NTS-4 external send/return loop; no dry audio route exists in this Patch. Wash Macro drives HPF frequency, reverb decay, and return level.",
+    "midi": "MIDI channel 1, CC 2 drives Wash Macro. The macro opens the return only to raw 32768 (approximately -6 dB), raises HPF frequency, and extends reverb decay.",
+    "hardwareStatus": "Experimental: compiler validation does not verify this Patch on Euroburo hardware."
+  },
+  "extensions": {}
+}

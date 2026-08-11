@@ -1,0 +1,15 @@
+node_modules/
+.output/
+dist/
+.vinxi/
+.venv/
+.vendor/
+coverage/
+conformance-out/
+.pytest_cache/
+__pycache__/
+.playwright-cli/
+*.log
+.DS_Store
+.impeccable/references/
+.impeccable/direction-options.json

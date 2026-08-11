@@ -1,0 +1,1795 @@
+{
+  "format": "zoia-patch",
+  "schemaVersion": 1,
+  "documentId": "nts4-performance-rig-v1",
+  "name": "NTS4 Loop Wash",
+  "authoringMode": "free",
+  "modules": [
+    {
+      "id": "audio-in",
+      "configurationId": "audio-input-stereo",
+      "name": "NTS-4 Send",
+      "type": "Audio Input",
+      "category": "Interface",
+      "parameters": [],
+      "endpoints": [
+        {
+          "id": "output_L",
+          "key": "output_L",
+          "name": "Output L",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "output_R",
+          "key": "output_R",
+          "name": "Output R",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 1
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "audio-out",
+      "configurationId": "audio-output-stereo",
+      "name": "NTS-4 Return",
+      "type": "Audio Output",
+      "category": "Interface",
+      "parameters": [],
+      "endpoints": [
+        {
+          "id": "input_L",
+          "key": "input_L",
+          "name": "Input L",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "input_R",
+          "key": "input_R",
+          "name": "Input R",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 1
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "midi-clock",
+      "configurationId": "midi-clock-in",
+      "name": "OP-XY Clock",
+      "type": "Midi Clock In",
+      "category": "Interface",
+      "parameters": [],
+      "endpoints": [
+        {
+          "id": "quarter_out",
+          "key": "quarter_out",
+          "name": "Quarter Out",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 0
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "bar-clock",
+      "configurationId": "clock-divider",
+      "name": "1 Bar Clock",
+      "type": "Clock Divider",
+      "category": "CV",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "cv_input",
+          "kind": "parameter",
+          "name": "Cv Input",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "Hz",
+          "range": [
+            0,
+            40
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "reset_in",
+          "kind": "parameter",
+          "name": "Reset In",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "parameter-2",
+          "key": "modifier",
+          "kind": "parameter",
+          "name": "Modifier",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "cv_input",
+          "key": "cv_input",
+          "name": "Cv Input",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "reset_in",
+          "key": "reset_in",
+          "name": "Reset In",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "modifier",
+          "key": "modifier",
+          "name": "Modifier",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "cv_output",
+          "key": "cv_output",
+          "name": "Cv Output",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 3
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "phrase-clock",
+      "configurationId": "clock-divider",
+      "name": "4 Bar Clock",
+      "type": "Clock Divider",
+      "category": "CV",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "cv_input",
+          "kind": "parameter",
+          "name": "Cv Input",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "Hz",
+          "range": [
+            0,
+            40
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "reset_in",
+          "kind": "parameter",
+          "name": "Reset In",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "parameter-2",
+          "key": "modifier",
+          "kind": "parameter",
+          "name": "Modifier",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "cv_input",
+          "key": "cv_input",
+          "name": "Cv Input",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "reset_in",
+          "key": "reset_in",
+          "name": "Reset In",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "modifier",
+          "key": "modifier",
+          "name": "Modifier",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "cv_output",
+          "key": "cv_output",
+          "name": "Cv Output",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 3
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "crossfade-cc",
+      "configurationId": "midi-cc-20",
+      "name": "Crossfade CC20",
+      "type": "Midi CC In",
+      "category": "Interface",
+      "parameters": [],
+      "endpoints": [
+        {
+          "id": "cc_out",
+          "key": "cc_out",
+          "name": "Cc Out",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 0
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "loop-trigger",
+      "configurationId": "midi-notes-loop-trigger",
+      "name": "Loop Rec Note60",
+      "type": "Midi Notes In",
+      "category": "Interface",
+      "parameters": [],
+      "endpoints": [
+        {
+          "id": "note_out_1",
+          "key": "note_out_1",
+          "name": "Note Out 1",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "gate_out_1",
+          "key": "gate_out_1",
+          "name": "Gate Out 1",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "trigger_out_1",
+          "key": "trigger_out_1",
+          "name": "Trigger Out 1",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 3
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "record-quantize",
+      "configurationId": "sequencer-quantize-one-shot",
+      "name": "Record Quantize",
+      "type": "Sequencer",
+      "category": "CV",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "step_1",
+          "kind": "parameter",
+          "name": "Step 1",
+          "rawValue": 65535,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "Notes",
+          "range": [
+            null,
+            null
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "gate_in",
+          "kind": "parameter",
+          "name": "Gate In",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "parameter-2",
+          "key": "queue_start",
+          "kind": "parameter",
+          "name": "Queue Start",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "step_1",
+          "key": "step_1",
+          "name": "Step 1",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "gate_in",
+          "key": "gate_in",
+          "name": "Gate In",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 32
+        },
+        {
+          "id": "queue_start",
+          "key": "queue_start",
+          "name": "Queue Start",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 33
+        },
+        {
+          "id": "out_track_1",
+          "key": "out_track_1",
+          "name": "Out Track 1",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 36
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "pump-lfo",
+      "configurationId": "lfo-sidechain-ramp",
+      "name": "Quarter Pump",
+      "type": "LFO",
+      "category": "CV",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "tap_control",
+          "kind": "parameter",
+          "name": "Tap Control",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "BPM",
+          "range": [
+            2,
+            2400
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "phase_reset",
+          "kind": "parameter",
+          "name": "Phase Reset",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "tap_control",
+          "key": "tap_control",
+          "name": "Tap Control",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "phase_reset",
+          "key": "phase_reset",
+          "name": "Phase Reset",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 5
+        },
+        {
+          "id": "output",
+          "key": "output",
+          "name": "Output",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 3
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "pump-invert",
+      "configurationId": "cv-invert",
+      "name": "Pump Invert",
+      "type": "CV Invert",
+      "category": "CV",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "cv_input",
+          "kind": "parameter",
+          "name": "Cv Input",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "cv_input",
+          "key": "cv_input",
+          "name": "Cv Input",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "cv_output",
+          "key": "cv_output",
+          "name": "Cv Output",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 1
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "pump-depth",
+      "configurationId": "value",
+      "name": "Pump Depth",
+      "type": "Value",
+      "category": "CV",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "value",
+          "kind": "parameter",
+          "name": "Value",
+          "rawValue": 26214,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "value",
+          "key": "value",
+          "name": "Value",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "cv_output",
+          "key": "cv_output",
+          "name": "Cv Output",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 1
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "pump-scale",
+      "configurationId": "multiplier-2",
+      "name": "Pump Scale",
+      "type": "Multiplier",
+      "category": "CV",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "cv_input_1",
+          "kind": "parameter",
+          "name": "Cv Input 1",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "cv_input_2",
+          "kind": "parameter",
+          "name": "Cv Input 2",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "cv_input_1",
+          "key": "cv_input_1",
+          "name": "Cv Input 1",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "cv_input_2",
+          "key": "cv_input_2",
+          "name": "Cv Input 2",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "cv_output",
+          "key": "cv_output",
+          "name": "Cv Output",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 8
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "sidechain-vca",
+      "configurationId": "vca-stereo",
+      "name": "Sidechain VCA",
+      "type": "VCA",
+      "category": "Audio",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "level_control",
+          "kind": "parameter",
+          "name": "Level Control",
+          "rawValue": 65535,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "dB",
+          "range": [
+            null,
+            -12,
+            -6,
+            -2.5,
+            0
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in_1",
+          "key": "audio_in_1",
+          "name": "Audio In 1",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "audio_in_2",
+          "key": "audio_in_2",
+          "name": "Audio In 2",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "level_control",
+          "key": "level_control",
+          "name": "Level Control",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "audio_out_1",
+          "key": "audio_out_1",
+          "name": "Audio Out 1",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 3
+        },
+        {
+          "id": "audio_out_2",
+          "key": "audio_out_2",
+          "name": "Audio Out 2",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 4
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "wash-sum",
+      "configurationId": "mixer",
+      "name": "Wash Send Sum",
+      "type": "Audio Mixer",
+      "category": "Audio",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "gain_1",
+          "kind": "parameter",
+          "name": "Gain 1",
+          "rawValue": 54394,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "dB",
+          "range": [
+            -100,
+            -70,
+            -40,
+            -10,
+            20
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "gain_2",
+          "kind": "parameter",
+          "name": "Gain 2",
+          "rawValue": 54394,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "dB",
+          "range": [
+            -100,
+            -70,
+            -40,
+            -10,
+            20
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in_1_L",
+          "key": "audio_in_1_L",
+          "name": "Audio In 1 L",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "audio_in_2_L",
+          "key": "audio_in_2_L",
+          "name": "Audio In 2 L",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "gain_1",
+          "key": "gain_1",
+          "name": "Gain 1",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 16
+        },
+        {
+          "id": "gain_2",
+          "key": "gain_2",
+          "name": "Gain 2",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 17
+        },
+        {
+          "id": "audio_out_L",
+          "key": "audio_out_L",
+          "name": "Audio Out L",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 32
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "wash-delay",
+      "configurationId": "delay-clocked",
+      "name": "Wash Delay",
+      "type": "Delay Line",
+      "category": "Audio",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "modulation_in",
+          "kind": "parameter",
+          "name": "Modulation In",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "ms",
+          "range": [
+            0.02,
+            0.6,
+            18.3,
+            540,
+            16000
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "tap_tempo_in",
+          "kind": "parameter",
+          "name": "Tap Tempo In",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "BPM",
+          "range": [
+            2,
+            2400
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in",
+          "key": "audio_in",
+          "name": "Audio In",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "modulation_in",
+          "key": "modulation_in",
+          "name": "Modulation In",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "tap_tempo_in",
+          "key": "tap_tempo_in",
+          "name": "Tap Tempo In",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 3
+        },
+        {
+          "id": "audio_out",
+          "key": "audio_out",
+          "name": "Audio Out",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 4
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "wash-hpf",
+      "configurationId": "filter-highpass",
+      "name": "Wash HPF",
+      "type": "SV Filter",
+      "category": "Audio",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "frequency",
+          "kind": "parameter",
+          "name": "Frequency",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "Hz",
+          "range": [
+            27.5,
+            155.56,
+            880,
+            4978,
+            23999
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "resonance",
+          "kind": "parameter",
+          "name": "Resonance",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            1,
+            5.6,
+            31.6,
+            177.8,
+            1000
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in",
+          "key": "audio_in",
+          "name": "Audio In",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "frequency",
+          "key": "frequency",
+          "name": "Frequency",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "resonance",
+          "key": "resonance",
+          "name": "Resonance",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "hipass_output",
+          "key": "hipass_output",
+          "name": "Hipass Output",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 4
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "wash-reverb",
+      "configurationId": "reverb-send-stereo",
+      "name": "Wash Reverb",
+      "type": "Reverb Lite",
+      "category": "Effect",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "decay_time",
+          "kind": "parameter",
+          "name": "Decay Time",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "s",
+          "range": [
+            0,
+            2.62,
+            4.12,
+            8.6,
+            null
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "mix",
+          "kind": "parameter",
+          "name": "Mix",
+          "rawValue": 65535,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "%",
+          "range": [
+            0,
+            100
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in_L",
+          "key": "audio_in_L",
+          "name": "Audio In L",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "decay_time",
+          "key": "decay_time",
+          "name": "Decay Time",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "mix",
+          "key": "mix",
+          "name": "Mix",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 3
+        },
+        {
+          "id": "audio_out_L",
+          "key": "audio_out_L",
+          "name": "Audio Out L",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 4
+        },
+        {
+          "id": "audio_out_R",
+          "key": "audio_out_R",
+          "name": "Audio Out R",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 5
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "live-mix",
+      "configurationId": "mixer-stereo",
+      "name": "Live Mix",
+      "type": "Audio Mixer",
+      "category": "Audio",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "gain_1",
+          "kind": "parameter",
+          "name": "Gain 1",
+          "rawValue": 54394,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "dB",
+          "range": [
+            -100,
+            -70,
+            -40,
+            -10,
+            20
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "gain_2",
+          "kind": "parameter",
+          "name": "Gain 2",
+          "rawValue": 54394,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "dB",
+          "range": [
+            -100,
+            -70,
+            -40,
+            -10,
+            20
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in_1_L",
+          "key": "audio_in_1_L",
+          "name": "Audio In 1 L",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "audio_in_1_R",
+          "key": "audio_in_1_R",
+          "name": "Audio In 1 R",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "audio_in_2_L",
+          "key": "audio_in_2_L",
+          "name": "Audio In 2 L",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "audio_in_2_R",
+          "key": "audio_in_2_R",
+          "name": "Audio In 2 R",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 3
+        },
+        {
+          "id": "gain_1",
+          "key": "gain_1",
+          "name": "Gain 1",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 16
+        },
+        {
+          "id": "gain_2",
+          "key": "gain_2",
+          "name": "Gain 2",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 17
+        },
+        {
+          "id": "audio_out_L",
+          "key": "audio_out_L",
+          "name": "Audio Out L",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 32
+        },
+        {
+          "id": "audio_out_R",
+          "key": "audio_out_R",
+          "name": "Audio Out R",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 33
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "looper",
+      "configurationId": "looper-8s-once",
+      "name": "4 Bar Looper",
+      "type": "Looper",
+      "category": "Audio",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "record",
+          "kind": "parameter",
+          "name": "Record",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "parameter-1",
+          "key": "restart_playback",
+          "kind": "parameter",
+          "name": "Restart Playback",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "parameter-2",
+          "key": "speed_pitch",
+          "kind": "parameter",
+          "name": "Speed Pitch",
+          "rawValue": 32768,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "%",
+          "range": [
+            3.1,
+            17.7,
+            100,
+            565.7,
+            3200
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in",
+          "key": "audio_in",
+          "name": "Audio In",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "record",
+          "key": "record",
+          "name": "Record",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "restart_playback",
+          "key": "restart_playback",
+          "name": "Restart Playback",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "speed_pitch",
+          "key": "speed_pitch",
+          "name": "Speed Pitch",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 3
+        },
+        {
+          "id": "audio_out",
+          "key": "audio_out",
+          "name": "Audio Out",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 6
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "crossfader",
+      "configurationId": "audio-balance-stereo",
+      "name": "Loop Live Fade",
+      "type": "Audio Balance",
+      "category": "Audio",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "mix",
+          "kind": "parameter",
+          "name": "Mix",
+          "rawValue": 32768,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "%",
+          "range": [
+            0,
+            100
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in_1_L",
+          "key": "audio_in_1_L",
+          "name": "Audio In 1 L",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "audio_in_1_R",
+          "key": "audio_in_1_R",
+          "name": "Audio In 1 R",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 4
+        },
+        {
+          "id": "audio_in_2_L",
+          "key": "audio_in_2_L",
+          "name": "Audio In 2 L",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "audio_in_2_R",
+          "key": "audio_in_2_R",
+          "name": "Audio In 2 R",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 5
+        },
+        {
+          "id": "mix",
+          "key": "mix",
+          "name": "Mix",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "audio_output_L",
+          "key": "audio_output_L",
+          "name": "Audio Output L",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 3
+        },
+        {
+          "id": "audio_output_R",
+          "key": "audio_output_R",
+          "name": "Audio Output R",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 6
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "wash-return-vca",
+      "configurationId": "vca-stereo",
+      "name": "Wash Return VCA",
+      "type": "VCA",
+      "category": "Audio",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "level_control",
+          "kind": "parameter",
+          "name": "Level Control",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": "dB",
+          "range": [
+            null,
+            -12,
+            -6,
+            -2.5,
+            0
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "audio_in_1",
+          "key": "audio_in_1",
+          "name": "Audio In 1",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "audio_in_2",
+          "key": "audio_in_2",
+          "name": "Audio In 2",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "level_control",
+          "key": "level_control",
+          "name": "Level Control",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 2
+        },
+        {
+          "id": "audio_out_1",
+          "key": "audio_out_1",
+          "name": "Audio Out 1",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 3
+        },
+        {
+          "id": "audio_out_2",
+          "key": "audio_out_2",
+          "name": "Audio Out 2",
+          "kind": "audioOutput",
+          "hardwareBlockIndex": 4
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "wash-intensity",
+      "configurationId": "value",
+      "name": "Wash Intensity",
+      "type": "Value",
+      "category": "CV",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "value",
+          "kind": "parameter",
+          "name": "Value",
+          "rawValue": 32768,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "value",
+          "key": "value",
+          "name": "Value",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "cv_output",
+          "key": "cv_output",
+          "name": "Cv Output",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 1
+        }
+      ],
+      "hardware": null
+    },
+    {
+      "id": "loop-rec-button",
+      "configurationId": "ui-button-momentary",
+      "name": "Loop Rec",
+      "type": "UI Button",
+      "category": "Interface",
+      "parameters": [
+        {
+          "id": "parameter-0",
+          "key": "in",
+          "kind": "parameter",
+          "name": "In",
+          "rawValue": 0,
+          "displayValue": "Configured in Patch Document",
+          "decoded": true,
+          "unit": null,
+          "range": [
+            0,
+            1
+          ]
+        }
+      ],
+      "endpoints": [
+        {
+          "id": "in",
+          "key": "in",
+          "name": "In",
+          "kind": "cvInput",
+          "hardwareBlockIndex": 0
+        },
+        {
+          "id": "cv_output",
+          "key": "cv_output",
+          "name": "Cv Output",
+          "kind": "cvOutput",
+          "hardwareBlockIndex": 1
+        }
+      ],
+      "hardware": null
+    }
+  ],
+  "connections": [
+    {
+      "id": "connection-0",
+      "sourceModuleId": "midi-clock",
+      "targetModuleId": "bar-clock",
+      "sourceEndpointId": "quarter_out",
+      "targetEndpointId": "cv_input",
+      "sourceEndpoint": "Quarter Out",
+      "targetEndpoint": "Cv Input",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-1",
+      "sourceModuleId": "midi-clock",
+      "targetModuleId": "phrase-clock",
+      "sourceEndpointId": "quarter_out",
+      "targetEndpointId": "cv_input",
+      "sourceEndpoint": "Quarter Out",
+      "targetEndpoint": "Cv Input",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-2",
+      "sourceModuleId": "midi-clock",
+      "targetModuleId": "pump-lfo",
+      "sourceEndpointId": "quarter_out",
+      "targetEndpointId": "tap_control",
+      "sourceEndpoint": "Quarter Out",
+      "targetEndpoint": "Tap Control",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-3",
+      "sourceModuleId": "midi-clock",
+      "targetModuleId": "pump-lfo",
+      "sourceEndpointId": "quarter_out",
+      "targetEndpointId": "phase_reset",
+      "sourceEndpoint": "Quarter Out",
+      "targetEndpoint": "Phase Reset",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-4",
+      "sourceModuleId": "midi-clock",
+      "targetModuleId": "wash-delay",
+      "sourceEndpointId": "quarter_out",
+      "targetEndpointId": "tap_tempo_in",
+      "sourceEndpoint": "Quarter Out",
+      "targetEndpoint": "Tap Tempo In",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-5",
+      "sourceModuleId": "loop-trigger",
+      "targetModuleId": "record-quantize",
+      "sourceEndpointId": "trigger_out_1",
+      "targetEndpointId": "queue_start",
+      "sourceEndpoint": "Trigger Out 1",
+      "targetEndpoint": "Queue Start",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-6",
+      "sourceModuleId": "loop-rec-button",
+      "targetModuleId": "record-quantize",
+      "sourceEndpointId": "cv_output",
+      "targetEndpointId": "queue_start",
+      "sourceEndpoint": "Cv Output",
+      "targetEndpoint": "Queue Start",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-7",
+      "sourceModuleId": "bar-clock",
+      "targetModuleId": "record-quantize",
+      "sourceEndpointId": "cv_output",
+      "targetEndpointId": "gate_in",
+      "sourceEndpoint": "Cv Output",
+      "targetEndpoint": "Gate In",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-8",
+      "sourceModuleId": "record-quantize",
+      "targetModuleId": "looper",
+      "sourceEndpointId": "out_track_1",
+      "targetEndpointId": "record",
+      "sourceEndpoint": "Out Track 1",
+      "targetEndpoint": "Record",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-9",
+      "sourceModuleId": "phrase-clock",
+      "targetModuleId": "looper",
+      "sourceEndpointId": "cv_output",
+      "targetEndpointId": "restart_playback",
+      "sourceEndpoint": "Cv Output",
+      "targetEndpoint": "Restart Playback",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-10",
+      "sourceModuleId": "crossfade-cc",
+      "targetModuleId": "crossfader",
+      "sourceEndpointId": "cc_out",
+      "targetEndpointId": "mix",
+      "sourceEndpoint": "Cc Out",
+      "targetEndpoint": "Mix",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-11",
+      "sourceModuleId": "pump-lfo",
+      "targetModuleId": "pump-invert",
+      "sourceEndpointId": "output",
+      "targetEndpointId": "cv_input",
+      "sourceEndpoint": "Output",
+      "targetEndpoint": "Cv Input",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-12",
+      "sourceModuleId": "pump-invert",
+      "targetModuleId": "pump-scale",
+      "sourceEndpointId": "cv_output",
+      "targetEndpointId": "cv_input_1",
+      "sourceEndpoint": "Cv Output",
+      "targetEndpoint": "Cv Input 1",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-13",
+      "sourceModuleId": "pump-depth",
+      "targetModuleId": "pump-scale",
+      "sourceEndpointId": "cv_output",
+      "targetEndpointId": "cv_input_2",
+      "sourceEndpoint": "Cv Output",
+      "targetEndpoint": "Cv Input 2",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-14",
+      "sourceModuleId": "pump-scale",
+      "targetModuleId": "sidechain-vca",
+      "sourceEndpointId": "cv_output",
+      "targetEndpointId": "level_control",
+      "sourceEndpoint": "Cv Output",
+      "targetEndpoint": "Level Control",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-15",
+      "sourceModuleId": "audio-in",
+      "targetModuleId": "sidechain-vca",
+      "sourceEndpointId": "output_L",
+      "targetEndpointId": "audio_in_1",
+      "sourceEndpoint": "Output L",
+      "targetEndpoint": "Audio In 1",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-16",
+      "sourceModuleId": "audio-in",
+      "targetModuleId": "sidechain-vca",
+      "sourceEndpointId": "output_R",
+      "targetEndpointId": "audio_in_2",
+      "sourceEndpoint": "Output R",
+      "targetEndpoint": "Audio In 2",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-17",
+      "sourceModuleId": "sidechain-vca",
+      "targetModuleId": "live-mix",
+      "sourceEndpointId": "audio_out_1",
+      "targetEndpointId": "audio_in_1_L",
+      "sourceEndpoint": "Audio Out 1",
+      "targetEndpoint": "Audio In 1 L",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-18",
+      "sourceModuleId": "sidechain-vca",
+      "targetModuleId": "live-mix",
+      "sourceEndpointId": "audio_out_2",
+      "targetEndpointId": "audio_in_1_R",
+      "sourceEndpoint": "Audio Out 2",
+      "targetEndpoint": "Audio In 1 R",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-19",
+      "sourceModuleId": "sidechain-vca",
+      "targetModuleId": "wash-sum",
+      "sourceEndpointId": "audio_out_1",
+      "targetEndpointId": "audio_in_1_L",
+      "sourceEndpoint": "Audio Out 1",
+      "targetEndpoint": "Audio In 1 L",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-20",
+      "sourceModuleId": "sidechain-vca",
+      "targetModuleId": "wash-sum",
+      "sourceEndpointId": "audio_out_2",
+      "targetEndpointId": "audio_in_2_L",
+      "sourceEndpoint": "Audio Out 2",
+      "targetEndpoint": "Audio In 2 L",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-21",
+      "sourceModuleId": "wash-sum",
+      "targetModuleId": "wash-delay",
+      "sourceEndpointId": "audio_out_L",
+      "targetEndpointId": "audio_in",
+      "sourceEndpoint": "Audio Out L",
+      "targetEndpoint": "Audio In",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-22",
+      "sourceModuleId": "wash-delay",
+      "targetModuleId": "wash-hpf",
+      "sourceEndpointId": "audio_out",
+      "targetEndpointId": "audio_in",
+      "sourceEndpoint": "Audio Out",
+      "targetEndpoint": "Audio In",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-23",
+      "sourceModuleId": "wash-hpf",
+      "targetModuleId": "wash-reverb",
+      "sourceEndpointId": "hipass_output",
+      "targetEndpointId": "audio_in_L",
+      "sourceEndpoint": "Hipass Output",
+      "targetEndpoint": "Audio In L",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-24",
+      "sourceModuleId": "wash-reverb",
+      "targetModuleId": "wash-return-vca",
+      "sourceEndpointId": "audio_out_L",
+      "targetEndpointId": "audio_in_1",
+      "sourceEndpoint": "Audio Out L",
+      "targetEndpoint": "Audio In 1",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-25",
+      "sourceModuleId": "wash-reverb",
+      "targetModuleId": "wash-return-vca",
+      "sourceEndpointId": "audio_out_R",
+      "targetEndpointId": "audio_in_2",
+      "sourceEndpoint": "Audio Out R",
+      "targetEndpoint": "Audio In 2",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-26",
+      "sourceModuleId": "wash-return-vca",
+      "targetModuleId": "live-mix",
+      "sourceEndpointId": "audio_out_1",
+      "targetEndpointId": "audio_in_2_L",
+      "sourceEndpoint": "Audio Out 1",
+      "targetEndpoint": "Audio In 2 L",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-27",
+      "sourceModuleId": "wash-return-vca",
+      "targetModuleId": "live-mix",
+      "sourceEndpointId": "audio_out_2",
+      "targetEndpointId": "audio_in_2_R",
+      "sourceEndpoint": "Audio Out 2",
+      "targetEndpoint": "Audio In 2 R",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-28",
+      "sourceModuleId": "wash-intensity",
+      "targetModuleId": "wash-return-vca",
+      "sourceEndpointId": "cv_output",
+      "targetEndpointId": "level_control",
+      "sourceEndpoint": "Cv Output",
+      "targetEndpoint": "Level Control",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-29",
+      "sourceModuleId": "wash-intensity",
+      "targetModuleId": "wash-hpf",
+      "sourceEndpointId": "cv_output",
+      "targetEndpointId": "frequency",
+      "sourceEndpoint": "Cv Output",
+      "targetEndpoint": "Frequency",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-30",
+      "sourceModuleId": "wash-intensity",
+      "targetModuleId": "wash-reverb",
+      "sourceEndpointId": "cv_output",
+      "targetEndpointId": "decay_time",
+      "sourceEndpoint": "Cv Output",
+      "targetEndpoint": "Decay Time",
+      "kind": "cv",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-31",
+      "sourceModuleId": "live-mix",
+      "targetModuleId": "looper",
+      "sourceEndpointId": "audio_out_L",
+      "targetEndpointId": "audio_in",
+      "sourceEndpoint": "Audio Out L",
+      "targetEndpoint": "Audio In",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-32",
+      "sourceModuleId": "looper",
+      "targetModuleId": "crossfader",
+      "sourceEndpointId": "audio_out",
+      "targetEndpointId": "audio_in_1_L",
+      "sourceEndpoint": "Audio Out",
+      "targetEndpoint": "Audio In 1 L",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-33",
+      "sourceModuleId": "looper",
+      "targetModuleId": "crossfader",
+      "sourceEndpointId": "audio_out",
+      "targetEndpointId": "audio_in_1_R",
+      "sourceEndpoint": "Audio Out",
+      "targetEndpoint": "Audio In 1 R",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-34",
+      "sourceModuleId": "live-mix",
+      "targetModuleId": "crossfader",
+      "sourceEndpointId": "audio_out_L",
+      "targetEndpointId": "audio_in_2_L",
+      "sourceEndpoint": "Audio Out L",
+      "targetEndpoint": "Audio In 2 L",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-35",
+      "sourceModuleId": "live-mix",
+      "targetModuleId": "crossfader",
+      "sourceEndpointId": "audio_out_R",
+      "targetEndpointId": "audio_in_2_R",
+      "sourceEndpoint": "Audio Out R",
+      "targetEndpoint": "Audio In 2 R",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-36",
+      "sourceModuleId": "crossfader",
+      "targetModuleId": "audio-out",
+      "sourceEndpointId": "audio_output_L",
+      "targetEndpointId": "input_L",
+      "sourceEndpoint": "Audio Output L",
+      "targetEndpoint": "Input L",
+      "kind": "audio",
+      "strengthRaw": 10000
+    },
+    {
+      "id": "connection-37",
+      "sourceModuleId": "crossfader",
+      "targetModuleId": "audio-out",
+      "sourceEndpointId": "audio_output_R",
+      "targetEndpointId": "input_R",
+      "sourceEndpoint": "Audio Output R",
+      "targetEndpoint": "Input R",
+      "kind": "audio",
+      "strengthRaw": 10000
+    }
+  ],
+  "pages": [],
+  "starred": [],
+  "colors": [],
+  "source": null,
+  "opaque": {},
+  "sequences": {
+    "nextModule": 23,
+    "nextConnection": 38
+  },
+  "annotations": {
+    "architecture": "Stereo ducked live signal with mono wash send, mono 8-second Looper, and stereo loop/live crossfade.",
+    "masterCompression": "Delegated to NTS-4 TOTAL-FX so compression is applied to the real sum.",
+    "clockSetup": "Tune 1 Bar Clock to divide quarter-note pulses by 4 and 4 Bar Clock to divide by 16 on hardware.",
+    "recordLogic": "Record is queued to the next bar; verify the Looper record-window behavior and 4-bar phase on hardware before performance use.",
+    "midi": "MIDI channel 1; crossfade CC 20; loop-record trigger note 60. Future Wash MIDI should target the Wash Intensity macro input only.",
+    "page3Macros": "Wash Intensity is a continuous Value macro; Loop Rec is an on-device UI Button feeding the same quantized trigger input as the Launchpad.",
+    "hardwareStatus": "Experimental: generated configurations have not yet been verified on Euroburo hardware."
+  },
+  "extensions": {}
+}

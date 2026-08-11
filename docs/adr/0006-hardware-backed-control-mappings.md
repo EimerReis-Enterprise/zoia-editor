@@ -1,0 +1,3 @@
+# Use hardware-backed Control Mappings
+
+Control Mappings will be represented and compiled as actual ZOIA CV Connections rather than editor-only macro automation. This keeps the editor’s mapping view portable in Patch Documents and executable after binary export; the editor may present endpoint ranges as a simplified mapping interface while retaining the underlying Connection data. A mapping is a managed CV Connection, not a parallel macro record. The first release supports authored Free Routing Patch Documents, including the NTS-4 performance rig; imported binary Patch Documents remain read-only for structural mapping changes. A target CV input accepts at most one Control Mapping in this release, avoiding ambiguous hardware CV summing.

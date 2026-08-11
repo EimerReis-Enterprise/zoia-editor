@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zoia-scope.local/schema/patch-document.v1.json",
+  "title": "ZOIA Patch Document v1",
+  "type": "object",
+  "required": ["format", "schemaVersion", "documentId", "name", "authoringMode", "modules", "connections", "pages", "starred", "colors", "source", "opaque", "sequences", "extensions"],
+  "properties": {
+    "format": { "const": "zoia-patch" },
+    "schemaVersion": { "const": 1 },
+    "documentId": { "type": "string", "minLength": 1 },
+    "name": { "type": "string" },
+    "authoringMode": { "enum": ["linear", "free", "preserved"] },
+    "modules": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/module" }
+    },
+    "connections": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/connection" }
+    },
+    "pages": { "type": "array" },
+    "starred": { "type": "array" },
+    "colors": { "type": "array" },
+    "source": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/binarySource" }
+      ]
+    },
+    "opaque": { "type": "object", "additionalProperties": true },
+    "sequences": {
+      "type": "object",
+      "required": ["nextModule", "nextConnection"],
+      "properties": {
+        "nextModule": { "type": "integer", "minimum": 0 },
+        "nextConnection": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "annotations": { "type": "object", "additionalProperties": { "type": "string" } },
+    "extensions": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "parameter": {
+      "type": "object",
+      "required": ["id", "key", "kind", "name", "rawValue", "displayValue", "decoded"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "key": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["parameter", "option"] },
+        "name": { "type": "string" },
+        "rawValue": { "type": ["integer", "number", "string", "null"] },
+        "displayValue": { "type": "string" },
+        "decoded": { "type": "boolean" },
+        "unit": { "type": ["string", "null"] },
+        "range": { "type": "array", "items": { "type": ["number", "null"] } }
+      },
+      "additionalProperties": false
+    },
+    "endpoint": {
+      "type": "object",
+      "required": ["id", "key", "name", "kind", "hardwareBlockIndex"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "key": { "type": "string", "minLength": 1 },
+        "name": { "type": "string" },
+        "kind": { "enum": ["audioInput", "audioOutput", "cvInput", "cvOutput", "midi", "unknown"] },
+        "hardwareBlockIndex": { "type": ["integer", "null"], "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "hardwarePlacement": {
+      "type": "object",
+      "required": ["moduleIndex", "moduleTypeIndex", "version", "page", "headerColorId", "position"],
+      "properties": {
+        "moduleIndex": { "type": "integer", "minimum": 0 },
+        "moduleTypeIndex": { "type": ["integer", "null"], "minimum": 0 },
+        "version": { "type": ["integer", "null"], "minimum": 0 },
+        "page": { "type": ["integer", "null"], "minimum": 0 },
+        "headerColorId": { "type": ["integer", "null"] },
+        "position": { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+      },
+      "additionalProperties": false
+    },
+    "module": {
+      "type": "object",
+      "required": ["id", "configurationId", "name", "type", "category", "parameters", "endpoints", "hardware"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "configurationId": { "type": ["string", "null"] },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "category": { "type": "string" },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/parameter" } },
+        "endpoints": { "type": "array", "items": { "$ref": "#/$defs/endpoint" } },
+        "hardware": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/hardwarePlacement" }] },
+        "opaque": true
+      },
+      "additionalProperties": false
+    },
+    "connection": {
+      "type": "object",
+      "required": ["id", "sourceModuleId", "targetModuleId", "sourceEndpointId", "targetEndpointId", "sourceEndpoint", "targetEndpoint", "kind", "strengthRaw"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "sourceModuleId": { "type": "string", "minLength": 1 },
+        "targetModuleId": { "type": "string", "minLength": 1 },
+        "sourceEndpointId": { "type": "string", "minLength": 1 },
+        "targetEndpointId": { "type": "string", "minLength": 1 },
+        "sourceEndpoint": { "type": "string" },
+        "targetEndpoint": { "type": "string" },
+        "kind": { "enum": ["audio", "cv", "midi", "unknown"] },
+        "strengthRaw": { "type": "integer", "minimum": 0, "maximum": 65535 }
+      },
+      "additionalProperties": false
+    },
+    "binarySource": {
+      "type": "object",
+      "required": ["kind", "filename", "sha256", "binaryBase64", "codec"],
+      "properties": {
+        "kind": { "const": "binary" },
+        "filename": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "binaryBase64": { "type": "string", "minLength": 1 },
+        "codec": {
+          "type": "object",
+          "required": ["name", "revision"],
+          "properties": {
+            "name": { "type": "string" },
+            "revision": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

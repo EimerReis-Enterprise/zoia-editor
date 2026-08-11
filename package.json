@@ -1,0 +1,63 @@
+{
+  "name": "zoia-editor",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "dev": "pnpm setup:parser && concurrently --kill-others --names web,parser --prefix-colors green,yellow \"pnpm dev:web\" \"pnpm dev:parser\"",
+    "dev:web": "vite dev --port 3000",
+    "dev:parser": ".venv/bin/python -m uvicorn service.main:app --reload --port 8787",
+    "setup:parser": "bash scripts/setup-parser.sh",
+    "generate-routes": "tsr generate",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "architecture": "depcruise src --config dependency-cruiser.config.cjs",
+    "test": "vitest run",
+    "test:parser": "pnpm setup:parser && .venv/bin/python -m pytest service/tests",
+    "conformance:compiler": "pnpm setup:parser && .venv/bin/python -m service.conformance_harness",
+    "check": "pnpm typecheck && pnpm lint && pnpm architecture && pnpm test && pnpm test:parser && pnpm build",
+    "format": "prettier --write . && eslint --fix"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "^3.1.0",
+    "@tanstack/react-router": "latest",
+    "@tanstack/react-start": "latest",
+    "@xyflow/react": "^12.11.2",
+    "lucide-react": "^1.29.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/eslint-config": "latest",
+    "@tanstack/router-cli": "^1.132.0",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@types/dagre": "^0.7.54",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^10.0.4",
+    "dependency-cruiser": "^18.1.1",
+    "eslint": "^9.20.0",
+    "jsdom": "^30.0.1",
+    "prettier": "^3.8.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.0",
+    "vitest": "^4.1.10"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "lightningcss"
+    ]
+  }
+}
