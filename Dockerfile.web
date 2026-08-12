@@ -1,0 +1,15 @@
+FROM node:24-alpine AS builder
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@10.15.0 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json tsr.config.json vite.config.ts dependency-cruiser.config.cjs eslint.config.js prettier.config.js ./
+COPY public ./public
+COPY shared ./shared
+COPY src ./src
+RUN pnpm install --frozen-lockfile
+RUN pnpm build
+
+FROM nginxinc/nginx-unprivileged:1.29-alpine
+COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/dist/client /usr/share/nginx/html
+EXPOSE 8080
+HEALTHCHECK --interval=10s --timeout=3s --retries=5 CMD wget -q -O /dev/null http://127.0.0.1:8080/healthz || exit 1

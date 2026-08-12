@@ -1,0 +1,43 @@
+name: Check and deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: zoia-production
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm architecture
+      - run: pnpm test
+      - run: pnpm test:parser
+      - run: pnpm build
+      - name: Build production images
+        run: docker compose -f docker-compose.production.yml build
+
+  deploy:
+    needs: check
+    runs-on: self-hosted
+    environment: production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy and verify
+        run: bash deploy/deploy.sh "${GITHUB_SHA::12}"

@@ -1,7 +1,13 @@
+import asyncio
 import base64
 import json
+import os
+import time
+from collections import defaultdict, deque
+from contextlib import asynccontextmanager
 
-from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Body, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from service.module_catalog import catalog_payload
@@ -19,7 +25,33 @@ from service.patch_compiler import (
     resolve_experimental_configuration,
 )
 
-app = FastAPI(title="ZOIA Patch Parser", version="0.1.0")
+MAX_BINARY_BYTES = int(os.environ.get("CODEC_MAX_BINARY_BYTES", 1_048_576))
+MAX_JSON_BYTES = int(os.environ.get("CODEC_MAX_JSON_BYTES", 5_242_880))
+REQUEST_TIMEOUT_SECONDS = float(os.environ.get("CODEC_REQUEST_TIMEOUT_SECONDS", 15))
+RATE_LIMIT_PER_MINUTE = int(os.environ.get("CODEC_RATE_LIMIT_PER_MINUTE", 30))
+MAX_CONCURRENCY = int(os.environ.get("CODEC_MAX_CONCURRENCY", 2))
+ZOIA_LIB_REVISION = os.environ.get(
+    "ZOIA_LIB_REVISION", "9a959c4ef2ecbaa82f6525761472058bbead7d66"
+)
+
+_request_slots = asyncio.Semaphore(MAX_CONCURRENCY)
+_request_times: defaultdict[str, deque[float]] = defaultdict(deque)
+_rate_lock = asyncio.Lock()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    yield
+
+
+app = FastAPI(
+    title="ZOIA Hosted Codec",
+    version="0.1.0",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
+    lifespan=lifespan,
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
@@ -29,9 +61,71 @@ app.add_middleware(
 )
 
 
+def _client_address(request: Request) -> str:
+    return (
+        request.headers.get("cf-connecting-ip")
+        or request.headers.get("x-forwarded-for", "").split(",", 1)[0].strip()
+        or (request.client.host if request.client else "unknown")
+    )
+
+
+async def _within_rate_limit(client: str) -> bool:
+    now = time.monotonic()
+    async with _rate_lock:
+        requests = _request_times[client]
+        while requests and requests[0] <= now - 60:
+            requests.popleft()
+        if len(requests) >= RATE_LIMIT_PER_MINUTE:
+            return False
+        requests.append(now)
+        return True
+
+
+@app.middleware("http")
+async def protect_public_codec(request: Request, call_next):
+    if not request.url.path.startswith("/api/"):
+        return await call_next(request)
+    maximum = (
+        MAX_BINARY_BYTES + 65_536
+        if request.url.path in {"/api/patches/parse", "/api/patches/compile-imported"}
+        else MAX_JSON_BYTES
+    )
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > maximum:
+                return JSONResponse(status_code=413, content={"detail": "The request is too large."})
+        except ValueError:
+            return JSONResponse(status_code=400, content={"detail": "The Content-Length header is invalid."})
+    body = await request.body()
+    if len(body) > maximum:
+        return JSONResponse(status_code=413, content={"detail": "The request is too large."})
+    if not await _within_rate_limit(_client_address(request)):
+        return JSONResponse(
+            status_code=429,
+            headers={"Retry-After": "60"},
+            content={"detail": "Too many codec requests. Try again in one minute."},
+        )
+    try:
+        async with _request_slots:
+            return await asyncio.wait_for(call_next(request), timeout=REQUEST_TIMEOUT_SECONDS)
+    except TimeoutError:
+        return JSONResponse(
+            status_code=504,
+            content={"detail": "The codec operation exceeded its time limit."},
+        )
+
+
+async def _read_binary(file: UploadFile) -> bytes:
+    data = await file.read(MAX_BINARY_BYTES + 1)
+    if len(data) > MAX_BINARY_BYTES:
+        raise HTTPException(status_code=413, detail="The binary exceeds the 1 MiB limit.")
+    return data
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ready"}
+    return {"status": "ready", "zoiaLibRevision": ZOIA_LIB_REVISION}
 
 
 @app.get("/api/modules/catalog")
@@ -53,7 +147,7 @@ def resolve_experimental_module_configuration(payload: dict = Body(...)) -> dict
 @app.post("/api/patches/parse")
 async def parse_patch_file(file: UploadFile = File(...)) -> dict:
     try:
-        return parse_patch(await file.read(), file.filename or "patch.bin")
+        return parse_patch(await _read_binary(file), file.filename or "patch.bin")
     except InvalidPatchError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
     except ParserUnavailableError as error:
@@ -86,7 +180,7 @@ async def compile_imported_patch_file(
 
     try:
         result = compile_imported_patch(
-            await file.read(),
+            await _read_binary(file),
             CompileImportedPatchRequest(
                 draft_revision=draft_revision,
                 source_filename=file.filename or "patch.bin",

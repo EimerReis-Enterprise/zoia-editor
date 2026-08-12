@@ -1,0 +1,54 @@
+services:
+  web:
+    image: zoia-editor-web:${ZOIA_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: zoia-editor-web
+    restart: unless-stopped
+    expose:
+      - "8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.zoia-web.entrypoints=web"
+      - "traefik.http.routers.zoia-web.rule=Host(`zoia.eimerreis.de`)"
+      - "traefik.http.routers.zoia-web.priority=10"
+      - "traefik.http.services.zoia-web.loadbalancer.server.port=8080"
+    networks:
+      - proxy
+
+  codec:
+    image: zoia-editor-codec:${ZOIA_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile.codec
+    container_name: zoia-editor-codec
+    restart: unless-stopped
+    environment:
+      CODEC_RATE_LIMIT_PER_MINUTE: "30"
+      CODEC_REQUEST_TIMEOUT_SECONDS: "15"
+      CODEC_MAX_CONCURRENCY: "2"
+      CODEC_MAX_BINARY_BYTES: "1048576"
+      CODEC_MAX_JSON_BYTES: "5242880"
+    expose:
+      - "8787"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.zoia-codec.entrypoints=web"
+      - "traefik.http.routers.zoia-codec.rule=Host(`zoia.eimerreis.de`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.zoia-codec.priority=100"
+      - "traefik.http.routers.zoia-codec.middlewares=zoia-codec-limit"
+      - "traefik.http.middlewares.zoia-codec-limit.ratelimit.average=30"
+      - "traefik.http.middlewares.zoia-codec-limit.ratelimit.period=1m"
+      - "traefik.http.middlewares.zoia-codec-limit.ratelimit.burst=10"
+      - "traefik.http.middlewares.zoia-codec-limit.buffering.maxRequestBodyBytes=5242880"
+      - "traefik.http.services.zoia-codec.loadbalancer.server.port=8787"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
+    name: proxy

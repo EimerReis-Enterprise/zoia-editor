@@ -7,7 +7,7 @@ related_targets: ["src/features/patch-workbench/patch-workbench.tsx"]
 
 ## Scope and mode
 
-- Surface: local patch visualizer at `/`
+- Surface: public and self-hostable patch editor at `/`
 - Mode: Operate
 
 ## Audience and task
@@ -17,7 +17,7 @@ ZOIA owners import a local `.bin` or `.zoia.json`, create a safe mono Signal Cha
 ## Content and constraints
 
 - The graph is the dominant working surface.
-- Imported files remain local and untouched; Patch Document JSON is user-owned while recovery remains explicitly browser-local.
+- Patch Document JSON, recovery, and Patch History remain browser-local; binary operations use the transient Hosted Codec only after informed first-use acknowledgement.
 - Authored binaries and Module configurations remain visibly Experimental until hardware verification.
 - No RSC or hosted storage. Advanced routing supports stereo audio and explicit CV/MIDI-derived control Connections, while richer dedicated MIDI/modulation views remain deferred.
 - Meaning may not depend on color alone.

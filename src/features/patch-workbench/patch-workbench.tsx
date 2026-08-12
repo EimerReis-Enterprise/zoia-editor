@@ -62,6 +62,11 @@ import {
   workspaceLayout,
 } from '#/lib/domain/patch'
 import type { PatchDraftSession, PatchVersion } from '#/lib/domain/patch'
+import {
+  acceptHostedCodecConsent,
+  hasHostedCodecConsent,
+  requiresHostedCodec,
+} from '#/lib/infra/codec-consent'
 
 import { ConnectionInspector } from './connection-inspector'
 import { demoPatch } from './demo-patch'
@@ -87,6 +92,10 @@ function PatchWorkbenchSurface() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const versionFileInputRef = useRef<HTMLInputElement>(null)
   const [isExporting, setIsExporting] = useState(false)
+  const [codecConsent, setCodecConsent] = useState(hasHostedCodecConsent)
+  const [pendingCodecFile, setPendingCodecFile] = useState<File | null>(null)
+  const [isCodecDisclosureOpen, setIsCodecDisclosureOpen] = useState(false)
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false)
   const [isSavingVersion, setIsSavingVersion] = useState(false)
   const [isSaveVersionOpen, setIsSaveVersionOpen] = useState(false)
   const [isVersionInspectorOpen, setIsVersionInspectorOpen] = useState(false)
@@ -353,7 +362,7 @@ function PatchWorkbenchSurface() {
 
   useEffect(() => {
     const documentForCompilation = patchDocumentRef.current
-    if (!documentForCompilation) return
+    if (!documentForCompilation || !codecConsent) return
     const controller = new AbortController()
     const revision = draftRevision
     setCompilationPending(revision)
@@ -380,6 +389,7 @@ function PatchWorkbenchSurface() {
       controller.abort()
     }
   }, [
+    codecConsent,
     draftRevision,
     setCompilation,
     setCompilationError,
@@ -443,6 +453,11 @@ function PatchWorkbenchSurface() {
 
   const loadFile = async (file: File | undefined) => {
     if (!file) return
+    if (requiresHostedCodec(file) && !hasHostedCodecConsent()) {
+      setPendingCodecFile(file)
+      setIsCodecDisclosureOpen(true)
+      return
+    }
     setImportError(null)
     setImporting(true)
     try {
@@ -500,6 +515,15 @@ function PatchWorkbenchSurface() {
   const onDrop = (event: DragEvent<HTMLElement>) => {
     event.preventDefault()
     void loadFile(event.dataTransfer.files[0])
+  }
+
+  const acceptCodecDisclosure = () => {
+    const file = pendingCodecFile
+    acceptHostedCodecConsent()
+    setCodecConsent(true)
+    setPendingCodecFile(null)
+    setIsCodecDisclosureOpen(false)
+    if (file) void loadFile(file)
   }
 
   const onNodeClick: NodeMouseHandler = (_event, node) => {
@@ -720,6 +744,11 @@ function PatchWorkbenchSurface() {
   }
 
   const exportBinary = async () => {
+    if (!hasHostedCodecConsent()) {
+      setPendingCodecFile(null)
+      setIsCodecDisclosureOpen(true)
+      return
+    }
     const state = useWorkbenchStore.getState()
     if (!state.patchDocument) return
     const revision = state.draftRevision
@@ -1028,8 +1057,10 @@ function PatchWorkbenchSurface() {
               <TriangleAlert size={15} />
             ) : null}
             <span>
-              {compilationStatus === 'pending'
-                ? `Validating revision ${draftRevision}`
+              {!codecConsent
+                ? 'Codec acknowledgement required'
+                : compilationStatus === 'pending'
+                  ? `Validating revision ${draftRevision}`
                 : compilationStatus === 'valid'
                   ? `Revision ${draftRevision} ready`
                   : compilationStatus === 'invalid'
@@ -1068,7 +1099,7 @@ function PatchWorkbenchSurface() {
             onClick={() => void exportBinary()}
             disabled={
               isExporting ||
-              compilationStatus === 'pending' ||
+              (codecConsent && compilationStatus === 'pending') ||
               validationErrors.length > 0
             }
           >
@@ -1253,8 +1284,15 @@ function PatchWorkbenchSurface() {
                 )}
               </div>
               <small>
-                LOCAL ONLY · HARDWARE UNVERIFIED · ORIGINAL FILES UNTOUCHED
+                LOCAL WORKSPACE · BINARY CODEC TRANSIENT · ORIGINAL FILES UNTOUCHED
               </small>
+              <button
+                className="privacy-link"
+                type="button"
+                onClick={() => setIsPrivacyOpen(true)}
+              >
+                Privacy &amp; licenses
+              </button>
             </div>
           </div>
         )}
@@ -1487,6 +1525,135 @@ function PatchWorkbenchSurface() {
             CONFIGURATIONS ARE EXPERIMENTAL UNTIL VERIFIED ON HARDWARE
           </footer>
         </aside>
+      ) : null}
+
+      {isCodecDisclosureOpen ? (
+        <div
+          className="dialog-scrim"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) {
+              setPendingCodecFile(null)
+              setIsCodecDisclosureOpen(false)
+            }
+          }}
+        >
+          <section
+            className="new-patch-dialog codec-disclosure"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="codec-disclosure-title"
+          >
+            <header>
+              <Radio size={22} />
+              <h2 id="codec-disclosure-title">Use the Hosted Codec?</h2>
+            </header>
+            <p>
+              Binary import, validation, and export send ZOIA data securely to
+              zoia.eimerreis.de. The codec processes it in memory and does not
+              retain it. Patch Documents, recovery, and Patch History remain in
+              this browser.
+            </p>
+            <ul>
+              <li>Maximum binary size: 1 MiB</li>
+              <li>No account or server-side Patch library</li>
+              <li>You can continue JSON authoring if the codec is unavailable</li>
+            </ul>
+            <p className="codec-disclosure__links">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCodecDisclosureOpen(false)
+                  setIsPrivacyOpen(true)
+                }}
+              >
+                Read privacy &amp; license details
+              </button>
+            </p>
+            <div>
+              <button
+                className="dialog-cancel"
+                type="button"
+                onClick={() => {
+                  setPendingCodecFile(null)
+                  setIsCodecDisclosureOpen(false)
+                }}
+              >
+                Not now
+              </button>
+              <button
+                className="dialog-create"
+                type="button"
+                onClick={acceptCodecDisclosure}
+              >
+                <CheckCircle2 size={16} /> Continue
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {isPrivacyOpen ? (
+        <div
+          className="dialog-scrim"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) {
+              setIsPrivacyOpen(false)
+              if (pendingCodecFile) setIsCodecDisclosureOpen(true)
+            }
+          }}
+        >
+          <section
+            className="new-patch-dialog privacy-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="privacy-title"
+          >
+            <header>
+              <FileJson size={22} />
+              <h2 id="privacy-title">Privacy &amp; licenses</h2>
+            </header>
+            <h3>Your Local Workspace</h3>
+            <p>
+              Patch Documents, recovery snapshots, Patch History, and theme
+              preferences are stored in this browser. They are not synchronized
+              to an account or server.
+            </p>
+            <h3>Binary processing</h3>
+            <p>
+              Binary imports and exports are sent over HTTPS to the stateless
+              Hosted Codec, processed in memory, and discarded after the
+              response. The service does not intentionally retain Patch data.
+              Infrastructure may record standard request metadata such as time,
+              route, status, and network address for security and operation.
+            </p>
+            <h3>Open-source software</h3>
+            <p>
+              ZOIA / SCOPE and its Hosted Codec are licensed under GPL-3.0. The
+              codec includes meanmedianmoge/zoia_lib at the pinned revision
+              documented in the public source repository.
+            </p>
+            <div>
+              <a
+                className="dialog-source-link"
+                href="https://github.com/EimerReis-Enterprise/zoia-editor"
+                target="_blank"
+                rel="noreferrer"
+              >
+                View source
+              </a>
+              <button
+                className="dialog-create"
+                type="button"
+                onClick={() => {
+                  setIsPrivacyOpen(false)
+                  if (pendingCodecFile) setIsCodecDisclosureOpen(true)
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </section>
+        </div>
       ) : null}
 
       {isSaveVersionOpen ? (

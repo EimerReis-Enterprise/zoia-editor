@@ -1,6 +1,8 @@
 # ZOIA Patch Visualizer and Editor
 
-A local signal-flow visualizer and experimental mono Patch authoring workbench for Empress ZOIA `.bin` files and portable `.zoia.json` Patch Documents.
+A free and open-source signal-flow visualizer and Patch authoring workbench for Empress ZOIA `.bin` files and portable `.zoia.json` Patch Documents.
+
+The public editor is deployed at <https://zoia.eimerreis.de>. Patch Documents and Patch History stay in your browser; binary operations use a stateless Hosted Codec and are not retained.
 
 ## Run
 
@@ -46,7 +48,7 @@ Before changing or hardware-testing this rig, read its topology, controls, known
 
 An unchanged binary import exports the exact original bytes. Edited binaries are compiled and reparsed before download. Exports never overwrite the imported file and remain experimental until tested on real ZOIA hardware.
 
-Patch Document JSON import, authoring, visualization, and saving work without the Python service. Binary decoding and compilation still use the local codec adapter.
+Patch Document JSON import, authoring, visualization, and saving work without the Python service. Binary decoding and compilation use the local codec adapter in development and the transient Hosted Codec on the public deployment.
 
 ## Checks
 
@@ -80,4 +82,4 @@ Project-local agents can load [`zoia-preset-creation`](.pi/skills/zoia-preset-cr
 - `src/features/patch-workbench/` — React Flow UI and Zustand view state
 - `service/` — replaceable local FastAPI binary codec adapter around the pinned reference library
 
-`zoia_lib` is GPL-3.0 software fetched separately at setup time. See `docs/adr/0001-isolate-the-reference-parser.md` before packaging or distributing the combined application.
+The repository is licensed under GPL-3.0. The Hosted Codec includes pinned GPL-3.0 `zoia_lib`; see [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). Production deployment is documented in [`docs/deployment.md`](docs/deployment.md).

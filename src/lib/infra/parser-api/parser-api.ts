@@ -1,5 +1,4 @@
-const PARSER_API_URL =
-  import.meta.env.VITE_PARSER_API_URL ?? 'http://127.0.0.1:8787'
+const PARSER_API_URL = import.meta.env.VITE_PARSER_API_URL ?? ''
 
 export class ParserApiError extends Error {
   constructor(message: string) {
@@ -46,7 +45,7 @@ export async function fetchModuleCatalog(options?: {
     })
   } catch {
     throw new ParserApiError(
-      'The local Module catalog is not responding. Keep `pnpm dev` running and try again.',
+      'The Hosted Codec is unavailable. Patch Document authoring remains available.',
     )
   }
   if (!response.ok) {
@@ -71,7 +70,7 @@ export async function resolveExperimentalModuleConfiguration(input: {
     )
   } catch {
     throw new ParserApiError(
-      'The local Module resolver is not responding. Keep `pnpm dev` running and try again.',
+      'The Hosted Codec is unavailable, so this Experimental Module configuration cannot be resolved.',
     )
   }
   if (!response.ok)
@@ -98,7 +97,7 @@ export async function uploadPatchBinary(
     })
   } catch {
     throw new ParserApiError(
-      'The local parser is not responding. Keep `pnpm dev` running and try again.',
+      'The Hosted Codec is unavailable. You can still open and edit .zoia.json Patch Documents.',
     )
   }
 
@@ -133,7 +132,7 @@ export async function compileImportedPatchBinary(
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error
     throw new ParserApiError(
-      'The local compiler is not responding. Keep `pnpm dev` running and try again.',
+      'The Hosted Codec is unavailable. Save a Patch Version now and retry binary export later.',
     )
   }
 
@@ -160,7 +159,7 @@ export async function compilePatchDocumentBinary(
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error
     throw new ParserApiError(
-      'The local Patch Document codec is not responding. Keep `pnpm dev` running and try again.',
+      'The Hosted Codec is unavailable. Your Patch Document remains editable and saveable.',
     )
   }
   if (!response.ok) {
@@ -185,7 +184,7 @@ export async function compilePatchDraftBinary(
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error
     throw new ParserApiError(
-      'The local compiler is not responding. Keep `pnpm dev` running and try again.',
+      'The Hosted Codec is unavailable. Save a Patch Version now and retry binary export later.',
     )
   }
   if (!response.ok) {

@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-TanStack Start with React and TypeScript in client-rendered SPA mode, without React Server Components. React Flow provides graph interaction, Zustand holds UI state, and Tailwind CSS provides styling. Framework-neutral frontend code follows the project's `lib/` architecture. A local Python service initially wraps `zoia_lib`; a native TypeScript parser may replace it later.
+TanStack Start with React and TypeScript in client-rendered SPA mode, without React Server Components. React Flow provides graph interaction, Zustand holds UI state, and Tailwind CSS provides styling. Framework-neutral frontend code follows the project's `lib/` architecture. A stateless Python Hosted Codec wraps `zoia_lib` for binary operations; a native TypeScript or WebAssembly codec may replace it later.
 
 ## Users
 
@@ -20,11 +20,11 @@ Transform ZOIA patches into understandable logical graphs and a portable JSON-fi
 
 ## Positioning
 
-The product represents a patch according to its logical module relationships rather than reproducing the ZOIA's physical grid.
+The product represents a patch according to its logical module relationships rather than reproducing the ZOIA's physical grid. The editor is free and open source; future paid offerings may provide hosted convenience such as cross-device Preset management without making local authoring or self-hosting dependent on payment.
 
 ## Operating Context
 
-The MVP runs locally through one development command. Imported `.bin` parsing is ephemeral and never uploaded; `.zoia.json` Patch Documents are portable user-owned files, while browser recovery and up to 20 undo snapshots persist locally in IndexedDB.
+The editor runs locally through one development command and publicly at `zoia.eimerreis.de`. On the public deployment, anonymous `.bin` parsing and compilation are processed transiently by the hosted codec without retention; `.zoia.json` Patch Documents are portable user-owned files, while browser recovery, Patch History, and undo snapshots remain in the user's Local Workspace in IndexedDB.
 
 ## Capabilities and Constraints
 
@@ -35,7 +35,7 @@ The MVP runs locally through one development command. Imported `.bin` parsing is
 - Parameter values are decoded where trustworthy metadata exists and otherwise show explicit raw fallbacks.
 - One versioned, lossless Patch Document is canonical for binary imports, JSON imports, and new authoring; Patch Projections are derived views only.
 - Safe authoring starts with a prewired mono Signal Chain; Advanced authoring starts with stereo I/O and supports explicit type-compatible audio and CV endpoint Connections, branches, and disconnected construction states.
-- Patch Document state and bounded undo history live in the browser; a stateless local codec compiles, reparses, and validates exact Patch Revisions.
+- Patch Document state and bounded undo history live in the browser; the stateless Hosted Codec compiles, reparses, and validates exact Patch Revisions while ordinary authoring remains available during codec outages.
 - Initial authoring supports direct Connection insertion, connector- and card-drag linear Module reordering, structural Module removal, Parameter Edits, 100 in-session undo snapshots, 20 persisted undo snapshots, local recovery, background Validation Findings, guided Patch Version saves, semantic Patch History inspection and restoration, deterministic JSON downloads, and explicit binary downloads.
 - The initial advanced registry supports stereo audio, branches, CV, MIDI-derived control, clock routing, Looper, Sequencer, Audio Balance, and selected processing configurations. Feedback-specific safeguards, arbitrary Module options, bank export, hardware connectivity, hosted storage, and broad firmware compatibility remain outside the release.
 - Initial binary compatibility is pinned to one `zoia_lib` revision and hardware-tested fixtures. Structurally valid Patch Documents with unsupported configurations remain openable and saveable, while unsupported binary compilation fails with clear Validation Findings.

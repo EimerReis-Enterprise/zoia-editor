@@ -1,0 +1,27 @@
+FROM python:3.13-slim AS builder
+ARG ZOIA_LIB_REVISION=9a959c4ef2ecbaa82f6525761472058bbead7d66
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+WORKDIR /build
+RUN git clone https://github.com/meanmedianmoge/zoia_lib.git zoia_lib \
+  && git -C zoia_lib checkout "$ZOIA_LIB_REVISION" \
+  && rm -rf zoia_lib/.git
+
+FROM python:3.13-slim
+ARG ZOIA_LIB_REVISION=9a959c4ef2ecbaa82f6525761472058bbead7d66
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    ZOIA_LIB_PATH=/opt/zoia_lib \
+    ZOIA_LIB_REVISION=$ZOIA_LIB_REVISION
+WORKDIR /app
+RUN useradd --system --create-home --uid 10001 codec
+COPY service/requirements.production.txt ./service/requirements.production.txt
+RUN pip install --no-cache-dir -r service/requirements.production.txt
+COPY --from=builder /build/zoia_lib /opt/zoia_lib
+COPY service ./service
+COPY shared ./shared
+COPY LICENSE THIRD_PARTY_NOTICES.md ./
+RUN chown -R codec:codec /app /opt/zoia_lib
+USER codec
+EXPOSE 8787
+HEALTHCHECK --interval=10s --timeout=3s --retries=5 CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/health', timeout=2)" || exit 1
+CMD ["uvicorn", "service.main:app", "--host", "0.0.0.0", "--port", "8787", "--workers", "1", "--no-server-header", "--no-access-log"]

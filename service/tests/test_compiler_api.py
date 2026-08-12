@@ -19,6 +19,26 @@ FIXTURE_ARCHIVE = (
 )
 
 
+def test_health_identifies_the_pinned_codec_revision():
+    response = TestClient(app).get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "ready",
+        "zoiaLibRevision": "9a959c4ef2ecbaa82f6525761472058bbead7d66",
+    }
+
+
+def test_rejects_oversized_binary_before_parsing():
+    response = TestClient(app).post(
+        "/api/patches/parse",
+        files={"file": ("too-large.bin", b"x" * (1_048_576 + 1), "application/octet-stream")},
+    )
+
+    assert response.status_code == 413
+    assert response.json()["detail"] == "The binary exceeds the 1 MiB limit."
+
+
 def test_compile_imported_endpoint_returns_conformant_binary():
     with zipfile.ZipFile(FIXTURE_ARCHIVE) as archive:
         archived_name = next(name for name in archive.namelist() if name.endswith(".bin"))

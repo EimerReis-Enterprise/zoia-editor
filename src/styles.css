@@ -796,6 +796,18 @@ button:focus-visible,
   color: #738078;
   font-size: 0.56rem;
 }
+.privacy-link {
+  margin-top: 11px;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  padding: 0 0 2px;
+  background: transparent;
+  color: #91a394;
+  font: 0.56rem ui-monospace, monospace;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
 
 .react-flow {
   margin: 12px;
@@ -2674,6 +2686,56 @@ button:focus-visible,
 }
 .save-version-dialog {
   width: min(500px, 100%);
+}
+.codec-disclosure,
+.privacy-dialog {
+  width: min(560px, 100%);
+  max-height: min(88dvh, 720px);
+  overflow-y: auto;
+}
+.codec-disclosure ul {
+  display: grid;
+  gap: 7px;
+  margin: 0 0 12px;
+  padding-inline-start: 20px;
+  color: #a8baa9;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.codec-disclosure .codec-disclosure__links {
+  margin: 12px 0 0;
+}
+.codec-disclosure__links button {
+  min-height: auto;
+  padding: 0 0 2px;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  color: var(--phosphor);
+  font-size: 0.62rem;
+  text-transform: none;
+}
+.privacy-dialog h3 {
+  margin: 20px 0 5px;
+  color: var(--readout);
+  font-size: 0.78rem;
+}
+.privacy-dialog h3 + p {
+  margin: 0;
+}
+.dialog-source-link {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid #405046;
+  border-radius: 4px;
+  color: #a2b1a4;
+  font: 700 0.62rem ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  text-transform: uppercase;
 }
 .is-spinning {
   animation: spin 1s linear infinite;

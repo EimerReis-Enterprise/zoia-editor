@@ -40,6 +40,14 @@ _Avoid_: Undo history, Git repository
 A chronological browser for Patch History that summarizes how each Patch Version differs from its predecessor and can restore a chosen snapshot for further authoring.
 _Avoid_: Git log, undo panel, JSON diff viewer
 
+**Local Workspace**:
+The anonymous user's browser-owned Patch Documents, recovery state, and Patch Histories on one device. It is usable without an account and is distinct from future hosted Preset management.
+_Avoid_: Account, cloud library, server workspace
+
+**Hosted Codec**:
+The public, stateless processor that transiently decodes and compiles ZOIA binary data without retaining it. Sending a binary to it requires an informed first-use acknowledgement; Patch Document authoring and Patch History remain in the Local Workspace.
+_Avoid_: Cloud storage, hosted editor, local parser
+
 **Patch Compilation**:
 Transforming one Patch Revision into a ZOIA binary and a validation report.
 _Avoid_: Save, serialization
@@ -61,7 +69,7 @@ The exact unsigned 16-bit value stored by ZOIA for a Module parameter. It is can
 _Avoid_: Normalized value, display value
 
 **Module Configuration Registry**:
-The versioned catalog of authorable Module configurations shared by the browser and binary codec. Patch Documents reference stable configuration identities but retain enough resolved information to remain understandable independently.
+The versioned catalog of authorable Module configurations shared by the browser and binary codec. Patch Documents reference stable configuration identities but retain enough resolved information to remain understandable independently; ordinary authoring remains available when the codec is unavailable.
 _Avoid_: Python catalog, Module Library data
 
 **Verified Module Configuration**:

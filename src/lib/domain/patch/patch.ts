@@ -82,6 +82,8 @@ export const importPatchDocument = createMutation({
         throw new Error('The selected file does not contain valid JSON.')
       }
     } else {
+      if (file.size > 1_048_576)
+        throw new Error('The binary exceeds the 1 MiB Hosted Codec limit.')
       payload = await uploadPatchBinary(file, options)
     }
     const document = parsePatchDocument(payload)
