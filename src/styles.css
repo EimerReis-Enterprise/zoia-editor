@@ -471,6 +471,7 @@ button:focus-visible,
   font-size: 0.54rem;
   letter-spacing: 0.08em;
 }
+.version-history-button,
 .save-document-button,
 .export-button {
   min-height: 34px;
@@ -489,11 +490,23 @@ button:focus-visible,
   text-transform: uppercase;
   cursor: pointer;
 }
+.version-history-button,
 .save-document-button {
   border-color: #405347;
   background: #111a14;
   color: #b9c9ba;
 }
+.version-history-button span {
+  min-width: 17px;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #314a37;
+  color: var(--phosphor-bright);
+  font-size: 0.54rem;
+}
+.version-history-button:hover,
 .save-document-button:hover {
   border-color: #6f8d76;
   background: #18231b;
@@ -2361,6 +2374,167 @@ button:focus-visible,
   letter-spacing: 0.08em;
 }
 
+.version-inspector {
+  position: absolute;
+  z-index: 18;
+  top: 142px;
+  right: 12px;
+  bottom: 28px;
+  width: min(390px, calc(100vw - 24px));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #4b6352;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0d140f;
+  color: var(--readout);
+  box-shadow: -10px 18px 42px rgba(0, 0, 0, 0.58);
+}
+.version-inspector > header {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 14px;
+  border-bottom: 1px solid #34483a;
+  color: var(--phosphor);
+  background: #121b15;
+}
+.version-inspector > header div { flex: 1; }
+.version-inspector h2 {
+  margin: 0 0 3px;
+  color: var(--readout);
+  font-size: 0.92rem;
+}
+.version-inspector > header span {
+  color: #829586;
+  font: 0.52rem ui-monospace, monospace;
+  letter-spacing: 0.09em;
+}
+.version-inspector > header button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #93a596;
+  cursor: pointer;
+}
+.version-inspector__tools {
+  padding: 12px 14px;
+  border-bottom: 1px solid #293b30;
+}
+.version-inspector__tools p {
+  margin: 0 0 10px;
+  color: #91a394;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+.version-inspector__tools button,
+.version-timeline > li > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid #405347;
+  border-radius: 4px;
+  background: #131d16;
+  color: #b8c8ba;
+  font: 600 0.56rem ui-monospace, monospace;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.version-timeline {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 14px 20px 36px;
+}
+.version-timeline > li {
+  position: relative;
+  padding: 16px 0 18px 12px;
+  border-bottom: 1px solid #26382d;
+}
+.version-timeline > li::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 21px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--phosphor);
+  border-radius: 50%;
+  background: #0d140f;
+}
+.version-timeline > li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 31px;
+  bottom: -18px;
+  width: 1px;
+  background: #3f5b47;
+}
+.version-timeline__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.version-timeline__heading strong {
+  color: var(--phosphor-bright);
+  font: 700 0.7rem ui-monospace, monospace;
+}
+.version-timeline__heading time {
+  color: #718176;
+  font-size: 0.56rem;
+}
+.version-timeline > li > p {
+  margin: 7px 0 9px;
+  color: #d2ddd2;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+.version-timeline ul {
+  display: grid;
+  gap: 5px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  color: #91a394;
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+.version-timeline ul span {
+  margin-right: 5px;
+  color: #739b7c;
+  font: 0.48rem ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.version-inspector__empty {
+  margin: auto;
+  max-width: 240px;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 28px;
+  color: #829586;
+  text-align: center;
+}
+.version-inspector__empty strong {
+  color: var(--readout);
+  font-size: 0.82rem;
+}
+.version-inspector__empty p {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
 .dialog-scrim {
   position: fixed;
   z-index: 40;
@@ -2492,6 +2666,14 @@ button:focus-visible,
   border: 1px solid var(--phosphor);
   background: var(--phosphor);
   color: #07100b;
+}
+.dialog-create:disabled,
+.dialog-cancel:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.save-version-dialog {
+  width: min(500px, 100%);
 }
 .is-spinning {
   animation: spin 1s linear infinite;
@@ -3011,6 +3193,39 @@ html[data-theme='light'] .module-library > footer {
   border-color: #b2beb3;
   color: #795b2d;
 }
+html[data-theme='light'] .version-inspector {
+  border-color: #9cad9d;
+  background: #f7faf5;
+  color: #243228;
+  box-shadow: -10px 18px 42px rgba(47, 66, 51, 0.2);
+}
+html[data-theme='light'] .version-inspector > header {
+  border-color: #bac8bb;
+  background: #edf3ea;
+}
+html[data-theme='light'] .version-inspector h2,
+html[data-theme='light'] .version-inspector__empty strong,
+html[data-theme='light'] .version-timeline > li > p {
+  color: #26352a;
+}
+html[data-theme='light'] .version-inspector__tools,
+html[data-theme='light'] .version-timeline > li {
+  border-color: #c7d1c6;
+}
+html[data-theme='light'] .version-inspector__tools p,
+html[data-theme='light'] .version-timeline ul,
+html[data-theme='light'] .version-inspector__empty {
+  color: #536858;
+}
+html[data-theme='light'] .version-timeline > li::before {
+  background: #f7faf5;
+}
+html[data-theme='light'] .version-inspector__tools button,
+html[data-theme='light'] .version-timeline > li > button {
+  border-color: #9bac9d;
+  background: #edf3ea;
+  color: #314c38;
+}
 html[data-theme='light'] .dialog-scrim {
   background: rgba(35, 49, 38, 0.55);
 }
@@ -3034,6 +3249,14 @@ html[data-theme='light'] .dialog-cancel {
 }
 
 @media (max-width: 820px) {
+  .version-inspector {
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    max-height: min(68dvh, 620px);
+  }
   .workbench {
     padding: 7px;
   }

@@ -25,8 +25,20 @@ Creating or modifying a Patch Document before compilation and validation.
 _Avoid_: Patch writing, editing from scratch
 
 **Patch Revision**:
-A monotonically increasing identifier for one exact state of a Patch Document. Validation and export results apply only to the revision they compiled.
+A monotonically increasing identifier for one exact working state of a Patch Document. Validation and export results apply only to the revision they compiled.
 _Avoid_: Draft Revision, version, save number
+
+**Patch Version**:
+An explicitly saved, portable snapshot in a sequence of related Patch Documents. It has an automatically assigned sequence number and a user-written summary.
+_Avoid_: Patch Revision, commit, filename version
+
+**Patch History**:
+The ordered collection of Patch Versions sharing one stable series identity. It can be reconstructed from portable Patch Documents or retained locally by the editor.
+_Avoid_: Undo history, Git repository
+
+**Version Inspector**:
+A chronological browser for Patch History that summarizes how each Patch Version differs from its predecessor and can restore a chosen snapshot for further authoring.
+_Avoid_: Git log, undo panel, JSON diff viewer
 
 **Patch Compilation**:
 Transforming one Patch Revision into a ZOIA binary and a validation report.

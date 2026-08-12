@@ -36,6 +36,22 @@ export {
 } from './patch-draft-persistence'
 export type { PatchDraftSession } from './patch-draft-persistence'
 export {
+  createPatchVersion,
+  describePatchChanges,
+  loadPatchHistory,
+  parsePatchVersion,
+  patchVersionMetadata,
+  PATCH_VERSION_EXTENSION_KEY,
+  samePatchVersionContent,
+  savePatchVersion,
+  versionedPatchFilename,
+} from './patch-versioning'
+export type {
+  PatchChange,
+  PatchVersion,
+  PatchVersionMetadata,
+} from './patch-versioning'
+export {
   canReorderDraftModules,
   createMonoPatchDraft,
   insertDraftModule,

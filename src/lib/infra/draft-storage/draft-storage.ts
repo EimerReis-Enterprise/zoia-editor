@@ -1,5 +1,5 @@
 const DATABASE_NAME = 'zoia-scope'
-const DATABASE_VERSION = 1
+const DATABASE_VERSION = 2
 const STORE_NAME = 'patch-drafts'
 const SESSION_KEY = 'active-session'
 
@@ -9,6 +9,12 @@ function openDatabase(): Promise<IDBDatabase> {
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains(STORE_NAME)) {
         request.result.createObjectStore(STORE_NAME)
+      }
+      if (!request.result.objectStoreNames.contains('patch-history')) {
+        const store = request.result.createObjectStore('patch-history', {
+          keyPath: ['seriesId', 'version'],
+        })
+        store.createIndex('seriesId', 'seriesId')
       }
     }
     request.onsuccess = () => resolve(request.result)

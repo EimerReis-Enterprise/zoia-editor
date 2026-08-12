@@ -21,6 +21,7 @@ import {
   Cable,
   CheckCircle2,
   Download,
+  FileClock,
   FileJson,
   FilePlus2,
   FileUp,
@@ -42,18 +43,25 @@ import type { ChangeEvent, DragEvent, FormEvent } from 'react'
 
 import {
   compilePatchDocument,
+  createPatchVersion,
   filterModuleCatalog,
   getModuleCatalog,
   groupModuleCatalog,
   importPatchDocument,
   loadPatchDraftSession,
+  loadPatchHistory,
+  parsePatchVersion,
+  patchVersionMetadata,
   resolveExperimentalModuleCatalogEntry,
   savePatchDraftSession,
+  savePatchVersion,
+  samePatchVersionContent,
   serializePatchDocument,
   sourceCalibrationFullScaleValue,
+  versionedPatchFilename,
   workspaceLayout,
 } from '#/lib/domain/patch'
-import type { PatchDraftSession } from '#/lib/domain/patch'
+import type { PatchDraftSession, PatchVersion } from '#/lib/domain/patch'
 
 import { ConnectionInspector } from './connection-inspector'
 import { demoPatch } from './demo-patch'
@@ -61,6 +69,7 @@ import { layoutPatch } from './graph-layout'
 import { ModuleInspector } from './module-inspector'
 import { ModuleNode } from './module-node'
 import { SignalEdge } from './signal-edge'
+import { VersionInspector } from './version-inspector'
 import { useWorkbenchStore } from './workbench-store'
 
 const nodeTypes = { module: ModuleNode }
@@ -76,7 +85,13 @@ export function PatchWorkbench() {
 
 function PatchWorkbenchSurface() {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const versionFileInputRef = useRef<HTMLInputElement>(null)
   const [isExporting, setIsExporting] = useState(false)
+  const [isSavingVersion, setIsSavingVersion] = useState(false)
+  const [isSaveVersionOpen, setIsSaveVersionOpen] = useState(false)
+  const [isVersionInspectorOpen, setIsVersionInspectorOpen] = useState(false)
+  const [versionMessage, setVersionMessage] = useState('')
+  const [patchHistory, setPatchHistory] = useState<PatchVersion[]>([])
   const [isNewPatchOpen, setIsNewPatchOpen] = useState(false)
   const [newPatchName, setNewPatchName] = useState('New Patch')
   const [newPatchMode, setNewPatchMode] = useState<'linear' | 'free'>('linear')
@@ -131,6 +146,7 @@ function PatchWorkbenchSurface() {
     setHardwareProfile,
     setPatch,
     setPatchDocument,
+    setVersionedPatchDocument,
     setModuleCatalog,
     createDraft,
     createAdvancedDocument,
@@ -264,6 +280,37 @@ function PatchWorkbenchSurface() {
       .then(setRecoverableSession)
       .catch(() => setRecoverableSession(null))
   }, [])
+
+  useEffect(() => {
+    if (!patchDocument) {
+      setPatchHistory([])
+      return
+    }
+    const metadata = patchVersionMetadata(patchDocument)
+    if (!metadata) {
+      setPatchHistory([])
+      return
+    }
+    void loadPatchHistory(metadata.seriesId)
+      .then((history) => {
+        const includesCurrent = history.some(
+          (version) => version.metadata.version === metadata.version,
+        )
+        setPatchHistory(
+          includesCurrent
+            ? history
+            : [...history, { metadata, document: patchDocument }].sort(
+                (left, right) => left.metadata.version - right.metadata.version,
+              ),
+        )
+      })
+      .catch(() => setPatchHistory([{ metadata, document: patchDocument }]))
+  }, [
+    patchDocument?.documentId,
+    patchDocument
+      ? patchVersionMetadata(patchDocument)?.version
+      : undefined,
+  ])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -415,6 +462,39 @@ function PatchWorkbenchSurface() {
   const onFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     void loadFile(event.target.files?.[0])
     event.target.value = ''
+  }
+
+  const onVersionFilesChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = [...(event.target.files ?? [])]
+    event.target.value = ''
+    if (!files.length) return
+    try {
+      const versions = await Promise.all(
+        files.map(async (file) => parsePatchVersion(JSON.parse(await file.text()))),
+      )
+      const seriesIds = new Set(versions.map((version) => version.metadata.seriesId))
+      if (seriesIds.size !== 1) {
+        throw new Error('Choose versions from one Patch History at a time.')
+      }
+      const importedSeriesId = versions[0].metadata.seriesId
+      const existingVersions = patchHistory.filter(
+        (version) => version.metadata.seriesId === importedSeriesId,
+      )
+      const merged = new Map<number, PatchVersion>()
+      for (const version of [...existingVersions, ...versions]) {
+        merged.set(version.metadata.version, version)
+        await savePatchVersion(version)
+      }
+      const history = [...merged.values()].sort(
+        (left, right) => left.metadata.version - right.metadata.version,
+      )
+      setPatchHistory(history)
+      setIsVersionInspectorOpen(true)
+    } catch (error) {
+      setImportError(
+        error instanceof Error ? error.message : 'Patch Versions could not be loaded.',
+      )
+    }
   }
 
   const onDrop = (event: DragEvent<HTMLElement>) => {
@@ -586,20 +666,57 @@ function PatchWorkbenchSurface() {
     setIsConnectionOpen(false)
   }
 
-  const saveDocument = () => {
+  const submitSaveVersion = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     const currentDocument = useWorkbenchStore.getState().patchDocument
-    if (!currentDocument) return
-    const blob = new Blob([serializePatchDocument(currentDocument)], {
-      type: 'application/json',
-    })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    const safeName =
-      currentDocument.name.replace(/[^a-z0-9-_ ]/gi, '').trim() || 'patch'
-    link.download = `${safeName}.zoia.json`
-    link.click()
-    URL.revokeObjectURL(url)
+    if (!currentDocument || !versionMessage.trim()) return
+    const sourceVersion = patchVersionMetadata(currentDocument)
+    const savedSource = sourceVersion
+      ? patchHistory.find(
+          (version) => version.metadata.version === sourceVersion.version,
+        )
+      : patchHistory.at(-1)
+    if (
+      savedSource &&
+      samePatchVersionContent(savedSource.document, currentDocument)
+    ) {
+      setImportError('Change the Patch Document before saving another version.')
+      setIsSaveVersionOpen(false)
+      return
+    }
+    setIsSavingVersion(true)
+    try {
+      const version = createPatchVersion(currentDocument, patchHistory, versionMessage)
+      await savePatchVersion(version)
+      setVersionedPatchDocument(version.document)
+      setPatchHistory((history) => [...history, version])
+      const blob = new Blob([serializePatchDocument(version.document)], {
+        type: 'application/json',
+      })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = versionedPatchFilename(
+        version.document.name,
+        version.metadata.version,
+      )
+      link.click()
+      URL.revokeObjectURL(url)
+      setVersionMessage('')
+      setIsSaveVersionOpen(false)
+      setIsVersionInspectorOpen(true)
+    } catch (error) {
+      setImportError(
+        error instanceof Error ? error.message : 'Patch Version could not be saved.',
+      )
+    } finally {
+      setIsSavingVersion(false)
+    }
+  }
+
+  const restorePatchVersion = (version: PatchVersion) => {
+    setPatchDocument(version.document)
+    setIsVersionInspectorOpen(false)
   }
 
   const exportBinary = async () => {
@@ -761,6 +878,14 @@ function PatchWorkbenchSurface() {
             accept=".bin,.json,application/json,application/octet-stream"
             onChange={onFileChange}
           />
+          <input
+            ref={versionFileInputRef}
+            className="sr-only"
+            type="file"
+            multiple
+            accept=".json,application/json"
+            onChange={(event) => void onVersionFilesChange(event)}
+          />
         </div>
       </header>
 
@@ -919,11 +1044,23 @@ function PatchWorkbenchSurface() {
             </small>
           </div>
           <button
+            className="version-history-button"
+            type="button"
+            onClick={() => {
+              selectModule(null)
+              setIsVersionInspectorOpen((open) => !open)
+            }}
+            aria-expanded={isVersionInspectorOpen}
+          >
+            <FileClock size={16} /> History
+            {patchHistory.length ? <span>{patchHistory.length}</span> : null}
+          </button>
+          <button
             className="save-document-button"
             type="button"
-            onClick={saveDocument}
+            onClick={() => setIsSaveVersionOpen(true)}
           >
-            <FileJson size={16} /> Save .zoia.json
+            <FileJson size={16} /> Save version
           </button>
           <button
             className="export-button"
@@ -1131,6 +1268,15 @@ function PatchWorkbenchSurface() {
           </footer>
         ) : null}
       </section>
+
+      {patch && isVersionInspectorOpen ? (
+        <VersionInspector
+          history={patchHistory}
+          onClose={() => setIsVersionInspectorOpen(false)}
+          onImport={() => versionFileInputRef.current?.click()}
+          onRestore={restorePatchVersion}
+        />
+      ) : null}
 
       {patch && selectedModuleId ? (
         <ModuleInspector
@@ -1341,6 +1487,75 @@ function PatchWorkbenchSurface() {
             CONFIGURATIONS ARE EXPERIMENTAL UNTIL VERIFIED ON HARDWARE
           </footer>
         </aside>
+      ) : null}
+
+      {isSaveVersionOpen ? (
+        <div
+          className="dialog-scrim"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target && !isSavingVersion) {
+              setIsSaveVersionOpen(false)
+            }
+          }}
+        >
+          <form
+            className="new-patch-dialog save-version-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="save-version-title"
+            onSubmit={(event) => void submitSaveVersion(event)}
+          >
+            <header>
+              <FileClock size={22} />
+              <h2 id="save-version-title">
+                Save v{String(
+                  Math.max(
+                    patchVersionMetadata(patchDocument!)?.version ?? 0,
+                    ...patchHistory.map((version) => version.metadata.version),
+                    0,
+                  ) + 1,
+                ).padStart(3, '0')}
+              </h2>
+            </header>
+            <p>
+              Record what changed. This version stays in local Patch History and
+              downloads as a portable Patch Document.
+            </p>
+            <label>
+              <span>VERSION SUMMARY · 120 CHARACTERS</span>
+              <input
+                autoFocus
+                required
+                maxLength={120}
+                value={versionMessage}
+                placeholder="More decay and a slower wash"
+                onChange={(event) => setVersionMessage(event.target.value)}
+              />
+            </label>
+            <div>
+              <button
+                className="dialog-cancel"
+                type="button"
+                disabled={isSavingVersion}
+                onClick={() => setIsSaveVersionOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="dialog-create"
+                type="submit"
+                disabled={isSavingVersion || !versionMessage.trim()}
+              >
+                {isSavingVersion ? (
+                  <LoaderCircle className="is-spinning" size={16} />
+                ) : (
+                  <Download size={16} />
+                )}
+                {isSavingVersion ? 'Saving…' : 'Save and download'}
+              </button>
+            </div>
+          </form>
+        </div>
       ) : null}
 
       {isNewPatchOpen ? (

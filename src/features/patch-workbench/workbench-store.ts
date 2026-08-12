@@ -102,6 +102,7 @@ type WorkbenchState = {
   }) => void
   setPatch: (patch: PatchProjection, sourceFile?: File) => void
   setPatchDocument: (document: PatchDocument) => void
+  setVersionedPatchDocument: (document: PatchDocument) => void
   setModuleCatalog: (catalog: ModuleCatalogEntry[]) => void
   createDraft: (name: string) => void
   createAdvancedDocument: (name: string) => void
@@ -248,6 +249,15 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
       toast: null,
     })
   },
+  setVersionedPatchDocument: (patchDocument) =>
+    set((state) => ({
+      patchDocument,
+      basePatchDocument: patchDocument,
+      patchDraft: patchDocumentToDraft(patchDocument),
+      patch: projectPatchDocument(patchDocument),
+      parameterEdits: [],
+      compilation: state.compilation,
+    })),
   setModuleCatalog: (moduleCatalog) =>
     set((state) => ({
       moduleCatalog,
