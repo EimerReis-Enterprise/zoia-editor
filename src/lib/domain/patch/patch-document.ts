@@ -114,15 +114,18 @@ export const patchDocumentSchema = z
         })
       }
       moduleIds.add(module.id)
-      const parameterKeys = new Set<string>()
+      const parameterKeys = {
+        option: new Set<string>(),
+        parameter: new Set<string>(),
+      }
       for (const parameter of module.parameters) {
-        if (parameterKeys.has(parameter.key)) {
+        if (parameterKeys[parameter.kind].has(parameter.key)) {
           context.addIssue({
             code: 'custom',
-            message: `Duplicate parameter ${parameter.key} on ${module.id}`,
+            message: `Duplicate ${parameter.kind} ${parameter.key} on ${module.id}`,
           })
         }
-        parameterKeys.add(parameter.key)
+        parameterKeys[parameter.kind].add(parameter.key)
         if (
           parameter.kind === 'parameter' &&
           typeof parameter.rawValue === 'number' &&

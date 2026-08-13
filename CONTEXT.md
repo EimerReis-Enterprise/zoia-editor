@@ -48,6 +48,14 @@ _Avoid_: Account, cloud library, server workspace
 The public, stateless processor that transiently decodes and compiles ZOIA binary data without retaining it. Sending a binary to it requires an informed first-use acknowledgement; Patch Document authoring and Patch History remain in the Local Workspace.
 _Avoid_: Cloud storage, hosted editor, local parser
 
+**PatchStorage Patch**:
+A community-published ZOIA Patch listed by PatchStorage that can be browsed and imported into the Local Workspace. The editor does not own, synchronize, or republish it.
+_Avoid_: Online Patch, cloud Patch, hosted Patch
+
+**Patch Provenance**:
+Portable attribution recording where an imported Patch originated, including its stable PatchStorage identity, original title, author, license, and import time. It is distinct from the embedded binary source and does not imply synchronization with PatchStorage.
+_Avoid_: Source binary, cloud link, ownership metadata
+
 **Patch Compilation**:
 Transforming one Patch Revision into a ZOIA binary and a validation report.
 _Avoid_: Save, serialization

@@ -62,6 +62,36 @@ describe('Patch Document', () => {
     expect(projectPatchDocument(restored).connections).toHaveLength(2)
   })
 
+  it('accepts an imported option sharing a hardware parameter key', async () => {
+    const document = createAdvancedPatchDocument(
+      'Imported',
+      await getModuleCatalog(),
+    )
+    const option = document.modules[0].parameters.find(
+      (parameter) => parameter.kind === 'option',
+    )!
+    const imported = {
+      ...document,
+      modules: [
+        {
+          ...document.modules[0],
+          parameters: [
+            ...document.modules[0].parameters,
+            {
+              ...option,
+              id: 'parameter-shared-key',
+              kind: 'parameter' as const,
+              rawValue: 0,
+            },
+          ],
+        },
+        ...document.modules.slice(1),
+      ],
+    }
+
+    expect(parsePatchDocument(imported)).toEqual(imported)
+  })
+
   it('stores and projects the 15 hardware Module colors', () => {
     const document = patchDocumentFromDraft(createMonoPatchDraft('Colors'), [])
     const colored = setPatchDocumentModuleColor(document, 'draft-input', 13)

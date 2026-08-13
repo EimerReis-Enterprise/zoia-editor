@@ -26,6 +26,7 @@ import {
   FilePlus2,
   FileUp,
   FlaskConical,
+  Globe2,
   LoaderCircle,
   Moon,
   Plus,
@@ -63,6 +64,11 @@ import {
 } from '#/lib/domain/patch'
 import type { PatchDraftSession, PatchVersion } from '#/lib/domain/patch'
 import {
+  patchStorageProvenance,
+  withPatchStorageProvenance,
+} from '#/lib/domain/patch-storage'
+import type { PatchStoragePatchDetail } from '#/lib/domain/patch-storage'
+import {
   acceptHostedCodecConsent,
   hasHostedCodecConsent,
   requiresHostedCodec,
@@ -73,6 +79,7 @@ import { demoPatch } from './demo-patch'
 import { layoutPatch } from './graph-layout'
 import { ModuleInspector } from './module-inspector'
 import { ModuleNode } from './module-node'
+import { PatchStorageBrowser } from './patch-storage-browser'
 import { SignalEdge } from './signal-edge'
 import { VersionInspector } from './version-inspector'
 import { useWorkbenchStore } from './workbench-store'
@@ -94,7 +101,10 @@ function PatchWorkbenchSurface() {
   const [isExporting, setIsExporting] = useState(false)
   const [codecConsent, setCodecConsent] = useState(hasHostedCodecConsent)
   const [pendingCodecFile, setPendingCodecFile] = useState<File | null>(null)
+  const [pendingPatchStoragePatch, setPendingPatchStoragePatch] =
+    useState<PatchStoragePatchDetail | null>(null)
   const [isCodecDisclosureOpen, setIsCodecDisclosureOpen] = useState(false)
+  const [isPatchStorageOpen, setIsPatchStorageOpen] = useState(false)
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false)
   const [isSavingVersion, setIsSavingVersion] = useState(false)
   const [isSaveVersionOpen, setIsSaveVersionOpen] = useState(false)
@@ -192,6 +202,7 @@ function PatchWorkbenchSurface() {
   const patchDocumentRef = useRef(patchDocument)
   patchDocumentRef.current = patchDocument
   const hasAuthoring = Boolean(patchDocument)
+  const provenance = patchStorageProvenance(patchDocument)
   const isFreeAuthoring = patchDocument?.authoringMode === 'free'
   const canInsertModules = Boolean(patchDraft)
   const canConnectEndpoints = Boolean(isFreeAuthoring)
@@ -451,17 +462,26 @@ function PatchWorkbenchSurface() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [redo, removeConnection, selectedConnectionId, undo])
 
-  const loadFile = async (file: File | undefined) => {
+  const loadFile = async (
+    file: File | undefined,
+    patchStoragePatch: PatchStoragePatchDetail | null = null,
+  ) => {
     if (!file) return
     if (requiresHostedCodec(file) && !hasHostedCodecConsent()) {
       setPendingCodecFile(file)
+      setPendingPatchStoragePatch(patchStoragePatch)
       setIsCodecDisclosureOpen(true)
       return
     }
     setImportError(null)
     setImporting(true)
     try {
-      setPatchDocument(await importPatchDocument(file))
+      const document = await importPatchDocument(file)
+      setPatchDocument(
+        patchStoragePatch
+          ? withPatchStorageProvenance(document, patchStoragePatch)
+          : document,
+      )
       setIsLibraryOpen(false)
     } catch (error) {
       setImportError(
@@ -519,11 +539,13 @@ function PatchWorkbenchSurface() {
 
   const acceptCodecDisclosure = () => {
     const file = pendingCodecFile
+    const patchStoragePatch = pendingPatchStoragePatch
     acceptHostedCodecConsent()
     setCodecConsent(true)
     setPendingCodecFile(null)
+    setPendingPatchStoragePatch(null)
     setIsCodecDisclosureOpen(false)
-    if (file) void loadFile(file)
+    if (file) void loadFile(file, patchStoragePatch)
   }
 
   const onNodeClick: NodeMouseHandler = (_event, node) => {
@@ -746,6 +768,7 @@ function PatchWorkbenchSurface() {
   const exportBinary = async () => {
     if (!hasHostedCodecConsent()) {
       setPendingCodecFile(null)
+      setPendingPatchStoragePatch(null)
       setIsCodecDisclosureOpen(true)
       return
     }
@@ -838,9 +861,15 @@ function PatchWorkbenchSurface() {
             <span>{patchDocument ? 'PATCH DOCUMENT' : 'PATCH ACQUIRED'}</span>
             <strong>{patch.name}</strong>
             <small>
-              {patchDraft
-                ? `MONO · ${isDraftSaved ? 'RECOVERY SAVED' : 'SAVING RECOVERY'} · EXPERIMENTAL`
-                : patch.sourceFilename}
+              {patchDraft ? (
+                `MONO · ${isDraftSaved ? 'RECOVERY SAVED' : 'SAVING RECOVERY'} · EXPERIMENTAL`
+              ) : provenance ? (
+                <a href={provenance.url} target="_blank" rel="noreferrer">
+                  PATCHSTORAGE · {provenance.author.name}
+                </a>
+              ) : (
+                patch.sourceFilename
+              )}
             </small>
           </div>
         ) : (
@@ -879,6 +908,7 @@ function PatchWorkbenchSurface() {
             type="button"
             onClick={() => setIsNewPatchOpen(true)}
             disabled={isCatalogLoading}
+            title="New Patch"
           >
             {isCatalogLoading ? (
               <LoaderCircle className="is-spinning" size={17} />
@@ -888,10 +918,21 @@ function PatchWorkbenchSurface() {
             New patch
           </button>
           <button
+            className="instrument-button is-secondary"
+            type="button"
+            onClick={() => setIsPatchStorageOpen(true)}
+            disabled={isImporting}
+            title="Browse PatchStorage"
+          >
+            <Globe2 size={17} />
+            Browse PatchStorage
+          </button>
+          <button
             className="instrument-button"
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isImporting}
+            title="Import Patch"
           >
             {isImporting ? (
               <RotateCcw className="is-spinning" size={17} />
@@ -1321,6 +1362,15 @@ function PatchWorkbenchSurface() {
         ) : null}
       </section>
 
+      <PatchStorageBrowser
+        currentPatchName={patch?.name ?? null}
+        isOpen={isPatchStorageOpen}
+        onClose={() => setIsPatchStorageOpen(false)}
+        onImport={(file, patchStoragePatch) => {
+          void loadFile(file, patchStoragePatch)
+        }}
+      />
+
       {patch && isVersionInspectorOpen ? (
         <VersionInspector
           history={patchHistory}
@@ -1548,6 +1598,7 @@ function PatchWorkbenchSurface() {
           onMouseDown={(event) => {
             if (event.currentTarget === event.target) {
               setPendingCodecFile(null)
+              setPendingPatchStoragePatch(null)
               setIsCodecDisclosureOpen(false)
             }
           }}
@@ -1590,6 +1641,7 @@ function PatchWorkbenchSurface() {
                 type="button"
                 onClick={() => {
                   setPendingCodecFile(null)
+                  setPendingPatchStoragePatch(null)
                   setIsCodecDisclosureOpen(false)
                 }}
               >
@@ -1760,8 +1812,8 @@ function PatchWorkbenchSurface() {
             </header>
             <p>
               {newPatchMode === 'linear'
-                ? 'Begin with Left Audio Input wired directly to Left Audio Output. Every Module stays in one safe linear Signal Chain.'
-                : 'Begin with stereo I/O and use explicit endpoint Connections for audio, CV, clock, and MIDI control.'}
+                ? 'Start with a mono patch.'
+                : 'Start with a stereo patch.'}
             </p>
             {patch ? (
               <p className="dialog-warning">
@@ -1770,15 +1822,15 @@ function PatchWorkbenchSurface() {
               </p>
             ) : null}
             <label>
-              <span>AUTHORING MODE</span>
+              <span>PATCH FORMAT</span>
               <select
                 value={newPatchMode}
                 onChange={(event) =>
                   setNewPatchMode(event.target.value as 'linear' | 'free')
                 }
               >
-                <option value="linear">Safe mono Signal Chain</option>
-                <option value="free">Advanced stereo routing</option>
+                <option value="linear">Mono</option>
+                <option value="free">Stereo</option>
               </select>
             </label>
             <label>
