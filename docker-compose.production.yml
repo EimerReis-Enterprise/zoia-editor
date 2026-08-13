@@ -39,11 +39,11 @@ services:
       - "traefik.http.routers.zoia-codec.entrypoints=web"
       - "traefik.http.routers.zoia-codec.rule=Host(`zoia.eimerreis.de`) && PathPrefix(`/api`)"
       - "traefik.http.routers.zoia-codec.priority=100"
-      - "traefik.http.routers.zoia-codec.middlewares=zoia-codec-limit"
-      - "traefik.http.middlewares.zoia-codec-limit.ratelimit.average=30"
-      - "traefik.http.middlewares.zoia-codec-limit.ratelimit.period=1m"
-      - "traefik.http.middlewares.zoia-codec-limit.ratelimit.burst=10"
-      - "traefik.http.middlewares.zoia-codec-limit.buffering.maxRequestBodyBytes=5242880"
+      - "traefik.http.routers.zoia-codec.middlewares=zoia-codec-rate-limit,zoia-codec-buffer"
+      - "traefik.http.middlewares.zoia-codec-rate-limit.ratelimit.average=30"
+      - "traefik.http.middlewares.zoia-codec-rate-limit.ratelimit.period=1m"
+      - "traefik.http.middlewares.zoia-codec-rate-limit.ratelimit.burst=10"
+      - "traefik.http.middlewares.zoia-codec-buffer.buffering.maxRequestBodyBytes=5242880"
       - "traefik.http.services.zoia-codec.loadbalancer.server.port=8787"
     networks:
       - proxy
