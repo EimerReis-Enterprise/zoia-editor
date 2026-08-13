@@ -20,7 +20,8 @@ COPY --from=builder /build/zoia_lib /opt/zoia_lib
 COPY service ./service
 COPY shared ./shared
 COPY LICENSE THIRD_PARTY_NOTICES.md ./
-RUN chown -R codec:codec /app /opt/zoia_lib
+RUN mkdir -p /home/codec/.local/share \
+  && chown -R codec:codec /app /opt/zoia_lib /home/codec/.local
 USER codec
 EXPOSE 8787
 HEALTHCHECK --interval=10s --timeout=3s --retries=5 CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/health', timeout=2)" || exit 1
