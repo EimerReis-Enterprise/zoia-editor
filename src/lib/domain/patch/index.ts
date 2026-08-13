@@ -12,11 +12,9 @@ export {
 export type { ZoiaModuleColorId } from './patch-colors'
 export type { PatchCompilation, ValidationFinding } from './patch-compilation'
 export {
-  calibrateControlMappingMaximumRaw,
-  controlMappingRawValueAtPercent,
   setSourceCalibrationFullScaleValue,
   sourceCalibrationFullScaleValue,
-} from './control-mapping-calibration'
+} from './source-calibration'
 export {
   parameterEditId,
   rawParameterValue,

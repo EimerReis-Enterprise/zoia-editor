@@ -2,9 +2,12 @@ import { ArrowRight, Cable, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 
 import {
-  calibrateControlMappingMaximumRaw,
-  controlMappingRawValueAtPercent,
-} from '#/lib/domain/patch'
+  calibrateControlMappingStrengthRaw,
+  controlMappingMaximumRaw,
+  controlMappingSaturationSourcePercent,
+  controlMappingTargetRawAtSourcePercent,
+} from '#/lib/domain/control-mapping'
+import { formatParameterValue } from '#/lib/domain/parameter-value'
 import type {
   PatchDocument,
   PatchDocumentConnection,
@@ -67,9 +70,16 @@ export function ConnectionInspector({
     typeof targetParameter?.rawValue === 'number'
       ? targetParameter.rawValue
       : 0
-  const initialMaximum = clampRaw(initialMinimum + connection.strengthRaw)
+  const initialMaximum = controlMappingMaximumRaw(
+    initialMinimum,
+    connection.strengthRaw,
+  )
   const [minimum, setMinimum] = useState(initialMinimum)
   const [maximum, setMaximum] = useState(initialMaximum)
+  const saturationSourcePercent = controlMappingSaturationSourcePercent(
+    initialMinimum,
+    connection.strengthRaw,
+  )
   const [strength, setStrength] = useState(connection.strengthRaw)
   const [controllerPosition, setControllerPosition] = useState(80)
   const [calibrationTarget, setCalibrationTarget] = useState(initialMaximum)
@@ -77,21 +87,34 @@ export function ConnectionInspector({
     100,
     (controllerPosition / sourceFullScaleValue) * 100,
   )
-  const calibratedMaximum = calibrateControlMappingMaximumRaw(
+  const calibratedStrength = calibrateControlMappingStrengthRaw(
     minimum,
     sourcePositionPercent,
     calibrationTarget,
   )
-  const calibratedPreview = controlMappingRawValueAtPercent(
+  const calibratedMaximum = controlMappingMaximumRaw(
     minimum,
-    calibratedMaximum,
+    calibratedStrength,
+  )
+  const calibratedPreview = controlMappingTargetRawAtSourcePercent(
+    minimum,
+    calibratedStrength,
     sourcePositionPercent,
   )
   const canSetRange =
     connection.kind === 'cv' && typeof targetParameter?.rawValue === 'number'
+  const formatTargetValue = (rawValue: number) =>
+    targetParameter
+      ? formatParameterValue(rawValue, targetParameter)
+      : `${rawValue} raw`
 
   const commitRange = () => {
-    if (canEdit && canSetRange) onSetRange(connection.id, minimum, maximum)
+    if (
+      canEdit &&
+      canSetRange &&
+      (minimum !== initialMinimum || maximum !== initialMaximum)
+    )
+      onSetRange(connection.id, minimum, maximum)
   }
   const commitStrength = () => {
     if (canEdit) onSetStrength(connection.id, strength)
@@ -143,13 +166,13 @@ export function ConnectionInspector({
           <div className="connection-section-heading">
             <div>
               <h3 id="connection-range-title">Target range</h3>
-              <p>{targetParameter.name} · raw 0–65535</p>
+              <p>{targetParameter.name} · reaches end at {saturationSourcePercent.toFixed(1)}% source</p>
             </div>
-            <strong>{minimum} → {maximum}</strong>
+            <strong>{formatTargetValue(minimum)} → {formatTargetValue(maximum)}</strong>
           </div>
           <div className="connection-range__controls">
             <label>
-              <span>START</span>
+              <span>START · {formatTargetValue(minimum)}</span>
               <input
                 type="range"
                 min="0"
@@ -171,7 +194,7 @@ export function ConnectionInspector({
               />
             </label>
             <label>
-              <span>END</span>
+              <span>END · {formatTargetValue(maximum)}</span>
               <input
                 type="range"
                 min={minimum}
@@ -204,10 +227,13 @@ export function ConnectionInspector({
             <div className="connection-calibration__controls">
               <label><span>CC</span><input type="number" min="1" max="127" value={controllerPosition} onChange={(event) => setControllerPosition(Math.min(127, Math.max(1, Number(event.target.value))))} /></label>
               <span>→</span>
-              <label><span>TARGET RAW</span><input type="number" min={minimum} max="65535" value={calibrationTarget} onChange={(event) => setCalibrationTarget(Math.max(minimum, clampRaw(Number(event.target.value))))} /></label>
-              <button type="button" disabled={!canEdit} onClick={() => onSetRange(connection.id, minimum, calibratedMaximum)}>Set range</button>
+              <label><span>TARGET · {formatTargetValue(calibrationTarget)}</span><input type="number" min={minimum} max="65535" value={calibrationTarget} onChange={(event) => setCalibrationTarget(Math.max(minimum, clampRaw(Number(event.target.value))))} /></label>
+              <button type="button" disabled={!canEdit} onClick={() => {
+                setMaximum(calibratedMaximum)
+                onSetStrength(connection.id, calibratedStrength)
+              }}>Set range</button>
             </div>
-            {calibrationTarget > calibratedPreview ? <small>Response saturates at {calibratedPreview} raw.</small> : null}
+            {calibrationTarget > calibratedPreview ? <small>Response saturates at {formatTargetValue(calibratedPreview)} · raw {calibratedPreview}.</small> : null}
           </div>
 
           <label className="connection-source-calibration">

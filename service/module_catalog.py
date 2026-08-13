@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 from typing import Any, Literal
 
@@ -44,12 +45,17 @@ INSERTABLE_CONFIGURATIONS = tuple(
 )
 
 
+@cache
 def _module_index() -> dict[str, dict[str, Any]]:
     return json.loads(MODULE_INDEX_PATH.read_text(encoding="utf-8"))
 
 
+def module_definition_by_index(module_index: int) -> dict[str, Any]:
+    return _module_index()[str(module_index)]
+
+
 def module_definition(configuration: ModuleConfiguration) -> dict[str, Any]:
-    return _module_index()[str(configuration.mod_idx)]
+    return module_definition_by_index(configuration.mod_idx)
 
 
 def default_raw_value(configuration: ModuleConfiguration, parameter_key: str) -> int:
@@ -64,6 +70,57 @@ def selected_options(configuration: ModuleConfiguration) -> dict[str, Any]:
         key: definition["options"][key][index]
         for key, index in configuration.option_indices.items()
     }
+
+
+def _max_time_scale(value: Any, base_seconds: float) -> float | None:
+    if isinstance(value, (int, float)):
+        seconds = float(value)
+    elif isinstance(value, str):
+        normalized = value.strip().lower()
+        try:
+            seconds = (
+                float(normalized[:-2].strip()) / 1_000
+                if normalized.endswith("ms")
+                else float(normalized[:-1].strip())
+                if normalized.endswith("s")
+                else float("nan")
+            )
+        except ValueError:
+            return None
+    else:
+        return None
+    return seconds / base_seconds if math.isfinite(seconds) and seconds > 0 else None
+
+
+def scaled_parameter_range(
+    module_index: int,
+    parameter_key: str,
+    metadata: dict[str, Any],
+    options: dict[str, Any],
+) -> list[Any]:
+    values = list(metadata.get("range", []))
+    factor = None
+    if metadata.get("unit") == "ms" and options.get("max_time") is not None:
+        factor = _max_time_scale(options["max_time"], 16.0)
+    elif (
+        module_index == 30
+        and options.get("length_edit") == "on"
+        and parameter_key in {"loop_length", "start_position"}
+        and metadata.get("unit") == "s"
+    ):
+        factor = _max_time_scale(options.get("max_rec_time"), 32.0)
+    elif (
+        module_index == 83
+        and parameter_key in {"grain_size", "grain_position"}
+        and metadata.get("unit") == "ms"
+    ):
+        factor = _max_time_scale(options.get("max_grain_size"), 16.0)
+    if factor is None:
+        return values
+    return [
+        float(value) * factor if isinstance(value, (int, float)) else value
+        for value in values
+    ]
 
 
 def _safe_range(values: list[Any]) -> list[float | None]:
@@ -86,7 +143,14 @@ def catalog_payload() -> list[dict[str, Any]]:
                     "name": key.replace("_", " ").title(),
                     "defaultRawValue": default_raw_value(configuration, key),
                     "unit": metadata.get("unit"),
-                    "range": _safe_range(metadata.get("range", [])),
+                    "range": _safe_range(
+                        scaled_parameter_range(
+                            configuration.mod_idx,
+                            key,
+                            metadata,
+                            selected_options(configuration),
+                        )
+                    ),
                 }
             )
         payload.append(

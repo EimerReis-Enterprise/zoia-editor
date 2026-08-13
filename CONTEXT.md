@@ -129,7 +129,7 @@ Any Module endpoint that emits CV and can drive a target CV input, including UI 
 _Avoid_: Macro knob, button-only control
 
 **Target Range**:
-The minimum and maximum values a Control Mapping can set on one target parameter, expressed in that parameter’s native units. The minimum initializes from the target’s current value.
+The minimum and maximum values a full-scale unipolar Control Source can set on one target parameter, expressed in that parameter’s native units. The minimum initializes from the target’s current Raw Parameter Value; the maximum is derived from ZOIA Connection Strength, whose raw encoding uses `10000` for 100% and is not itself a Raw Parameter Value.
 _Avoid_: CV strength, modulation depth
 
 **Macro Control**:

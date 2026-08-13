@@ -8,7 +8,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from service.module_catalog import CONFIGURATIONS
+from service.module_catalog import (
+    CONFIGURATIONS,
+    module_definition_by_index,
+    scaled_parameter_range,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 ZOIA_LIB_PATH = Path(os.environ.get("ZOIA_LIB_PATH", ROOT / ".vendor" / "zoia_lib"))
@@ -56,23 +60,123 @@ def _block_for_position(module: dict[str, Any], position: int) -> tuple[str, dic
     return None
 
 
+def _safe_parameter_range(values: list[Any]) -> list[float | None]:
+    return [
+        float(value) if isinstance(value, (int, float)) and math.isfinite(value) else None
+        for value in values
+    ]
+
+
+def _interpolate_parameter_value(
+    value: float, anchors: list[float], values: list[float]
+) -> float:
+    if value <= anchors[0]:
+        return values[0]
+    if value >= anchors[-1]:
+        return values[-1]
+    for index in range(1, len(anchors)):
+        if value > anchors[index]:
+            continue
+        start_anchor, end_anchor = anchors[index - 1], anchors[index]
+        start_value, end_value = values[index - 1], values[index]
+        if start_anchor == end_anchor:
+            return end_value
+        position = ((value - start_anchor) / (end_anchor - start_anchor)) ** 1.6
+        return start_value + (end_value - start_value) * position
+    return values[-1]
+
+
+def _display_parameter_value(
+    raw: int,
+    unit: str | None,
+    values: list[float | None],
+    default_raw: int,
+) -> str:
+    normalized = raw / 65_535
+    if not values:
+        return f"{normalized * 100:.1f}% raw range"
+    if raw == 0 and values[0] is None:
+        return f"−∞ {unit or ''}".strip()
+    if raw == 65_535 and values[-1] is None:
+        return f"∞ {unit or ''}".strip()
+    finite_values = [
+        value
+        if value is not None
+        else -120.0
+        if index == 0
+        else 487.68
+        if index == len(values) - 1 and unit == "s"
+        else 120.0
+        for index, value in enumerate(values)
+    ]
+    decoded = normalized
+    if len(finite_values) == 2:
+        decoded = finite_values[0] + (finite_values[1] - finite_values[0]) * normalized
+    elif len(finite_values) == 5:
+        anchors = [0.0, 0.25, 0.5, 0.75, 1.0]
+        if unit == "dB" and 0.0 not in finite_values and 0 < default_raw < 65_535:
+            default_position = default_raw / 65_535
+            insertion_index = next(
+                index for index, anchor in enumerate(anchors) if anchor > default_position
+            )
+            anchors.insert(insertion_index, default_position)
+            finite_values.insert(insertion_index, 0.0)
+        decoded = _interpolate_parameter_value(normalized, anchors, finite_values)
+    suffix = f" {unit}" if unit else ""
+    return f"{decoded:.1f}{suffix}"
+
+
 def _parameter_projection(module: dict[str, Any]) -> list[dict[str, Any]]:
     projected: list[dict[str, Any]] = []
     raw_values = module.get("parameters_raw", [])
+    try:
+        parameter_definitions = module_definition_by_index(int(module["mod_idx"])).get(
+            "param_defaults", {}
+        )
+    except (KeyError, TypeError, ValueError):
+        parameter_definitions = {}
 
     for index, (name, value) in enumerate(module.get("parameters", {}).items()):
         raw = raw_values[index] if index < len(raw_values) else None
-        projected.append(
-            {
-                "id": f"parameter-{index}",
-                "key": name,
-                "kind": "parameter",
-                "name": name.replace("_", " ").strip().title(),
-                "displayValue": f"{round(float(value) * 100)}% normalized",
-                "rawValue": raw,
-                "decoded": False,
-            }
+        metadata = parameter_definitions.get(name)
+        known_range = (
+            _safe_parameter_range(
+                scaled_parameter_range(
+                    int(module["mod_idx"]),
+                    name,
+                    metadata,
+                    module.get("options", {}),
+                )
+            )
+            if metadata is not None
+            else []
         )
+        decoded = isinstance(raw, int) and metadata is not None and len(known_range) >= 2
+        default_raw = (
+            max(0, min(65_535, round(float(metadata.get("value", 0)) * 65_535)))
+            if metadata is not None
+            else 0
+        )
+        parameter = {
+            "id": f"parameter-{index}",
+            "key": name,
+            "kind": "parameter",
+            "name": name.replace("_", " ").strip().title(),
+            "displayValue": (
+                _display_parameter_value(
+                    raw, metadata.get("unit"), known_range, default_raw
+                )
+                if decoded
+                else f"{round(float(value) * 100)}% normalized"
+            ),
+            "rawValue": raw,
+            "decoded": decoded,
+        }
+        if decoded:
+            parameter["defaultRawValue"] = default_raw
+            parameter["unit"] = metadata.get("unit")
+            parameter["range"] = known_range
+        projected.append(parameter)
 
     for name, value in module.get("options", {}).items():
         projected.append(

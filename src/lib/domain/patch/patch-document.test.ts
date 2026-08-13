@@ -93,7 +93,7 @@ describe('Patch Document', () => {
 
     expect(mapped.connections.at(-1)).toMatchObject({
       kind: 'cv',
-      strengthRaw: 30_000,
+      strengthRaw: 4_578,
       sourceModuleId: 'module-0',
       targetModuleId: 'module-1',
     })
@@ -115,7 +115,7 @@ describe('Patch Document', () => {
       20_000,
       50_000,
     )
-    expect(adjusted.connections.at(-1)?.strengthRaw).toBe(30_000)
+    expect(adjusted.connections.at(-1)?.strengthRaw).toBe(4_578)
     expect(adjusted.modules[3].parameters[0].rawValue).toBe(20_000)
     const unmapped = removePatchDocumentConnection(
       adjusted,

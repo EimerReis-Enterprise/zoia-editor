@@ -54,6 +54,7 @@
         "rawValue": { "type": ["integer", "number", "string", "null"] },
         "displayValue": { "type": "string" },
         "decoded": { "type": "boolean" },
+        "defaultRawValue": { "type": "integer", "minimum": 0, "maximum": 65535 },
         "unit": { "type": ["string", "null"] },
         "range": { "type": "array", "items": { "type": ["number", "null"] } }
       },

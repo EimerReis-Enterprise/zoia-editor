@@ -2,8 +2,8 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { PatchWorkbench } from '#/features/patch-workbench'
 
-export const Route = createFileRoute('/')({ component: PatchVisualizer })
+export const Route = createFileRoute('/')({ component: PatchEditor })
 
-function PatchVisualizer() {
+function PatchEditor() {
   return <PatchWorkbench />
 }

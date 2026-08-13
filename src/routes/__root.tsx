@@ -6,7 +6,7 @@ import appCss from '../styles.css?url'
 const directionContract = `
 THESIS: Treat patch routing as measurable evidence on a signal bench, refusing the generic node-editor dashboard.
 OWN-WORLD: CRT black and graphite panels, etched green graticules, restrained phosphor traces, and amber warning states.
-STORY: Acquire a local patch, read its complete audio path, select a module, and inspect the exact signal details.
+STORY: Open or create a local Patch Document, trace its logical routing, shape modules and control mappings, preserve versions, and compile deliberately for hardware.
 FIRST VIEWPORT: The graph owns the calibrated scope surface; patch readout sits above and the selected module docks at right.
 FORM: Reviewer light-table staging adapted as an instrument bench; direction seed bec773f4.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
@@ -18,8 +18,8 @@ export const Route = createRootRoute({
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { name: 'theme-color', content: '#090d0b' },
-      { name: 'description', content: 'Understand Empress ZOIA patches as logical audio signal-flow graphs.' },
-      { title: 'ZOIA / SCOPE — Patch Visualizer' },
+      { name: 'description', content: 'Understand, author, version, and compile Empress ZOIA patches as logical signal-flow graphs.' },
+      { title: 'ZOIA / SCOPE — Logical Patch Editor' },
     ],
     links: [
       { rel: 'stylesheet', href: appCss },

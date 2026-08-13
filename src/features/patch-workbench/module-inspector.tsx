@@ -19,6 +19,7 @@ import type {
 } from '#/lib/infra/hardware-verification'
 import type { CSSProperties } from 'react'
 
+import { formatParameterValue } from '#/lib/domain/parameter-value'
 import {
   DEFAULT_ZOIA_MODULE_COLOR_ID,
   rawParameterValue,
@@ -76,6 +77,10 @@ type ModuleInspectorProps = {
     minimumRaw: number,
     maximumRaw: number,
   ) => void
+  onSetConnectionStrength: (
+    connectionId: string,
+    strengthRaw: number,
+  ) => void
   onSetSourceCalibration: (
     moduleId: string,
     endpointId: string,
@@ -108,6 +113,7 @@ export function ModuleInspector({
   onChangeExperimentalOption,
   onCreateControlMapping,
   onSetControlMappingRange,
+  onSetConnectionStrength,
   onSetSourceCalibration,
   onRemoveConnection,
   onRemove,
@@ -486,6 +492,7 @@ export function ModuleInspector({
                 parameter={parameter}
                 sourceFullScaleValue={sourceFullScaleValue}
                 onSetRange={onSetControlMappingRange}
+                onSetStrength={onSetConnectionStrength}
                 onRemove={onRemoveConnection}
               />
             )
@@ -618,6 +625,9 @@ export function ModuleInspector({
                 parameter.key,
                 parameterEdits,
               )
+              const documentParameter = documentModule?.parameters.find(
+                (candidate) => candidate.key === parameter.key,
+              )
               const isEdited = currentRawValue !== originalRawValue
               const isEditable =
                 canEdit &&
@@ -668,7 +678,10 @@ export function ModuleInspector({
                     <div>
                       <strong>
                         {isEdited && currentRawValue !== null
-                          ? `${((currentRawValue / 65_535) * 100).toFixed(1)}% raw range`
+                          ? formatParameterValue(
+                              currentRawValue,
+                              documentParameter ?? {},
+                            )
                           : parameter.displayValue}
                       </strong>
                       {currentRawValue !== null ? (

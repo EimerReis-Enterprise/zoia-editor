@@ -5,14 +5,20 @@ from __future__ import annotations
 
 import json
 import math
+import os
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_PATH = ROOT / "shared" / "module-configurations.v1.json"
-INDEX_PATH = ROOT / ".vendor/zoia_lib/zoia_lib/common/schemas/ModuleIndex.json"
+ZOIA_LIB_PATH = ROOT / ".vendor" / "zoia_lib"
+INDEX_PATH = ZOIA_LIB_PATH / "zoia_lib" / "common" / "schemas" / "ModuleIndex.json"
 # These definitions calculate a different default grid size than their static
 # ModuleIndex metadata reports and remain hidden until their options are modeled.
 EXCLUDED_MODULE_INDICES = {4, 40, 75, 83, 104}
+
+sys.path.insert(0, str(ROOT))
+from service.module_catalog import scaled_parameter_range
 
 KIND = {
     "audio_in": "audioInput",
@@ -22,9 +28,11 @@ KIND = {
 }
 
 
-def safe_range(values: list[object]) -> list[float | None]:
+def safe_range(
+    values: list[object], preserve_numeric_type: bool = False
+) -> list[float | int | None]:
     return [
-        float(value)
+        (value if preserve_numeric_type else float(value))
         if isinstance(value, (int, float)) and math.isfinite(value)
         else None
         for value in values
@@ -35,11 +43,28 @@ def title(key: str) -> str:
     return key.replace("_", " ").title()
 
 
+def load_patch_binary():
+    sys.path.insert(0, str(ZOIA_LIB_PATH))
+    previous_cwd = Path.cwd()
+    try:
+        os.chdir(ZOIA_LIB_PATH)
+        from zoia_lib.backend.patch_binary import PatchBinary
+    finally:
+        os.chdir(previous_cwd)
+    return PatchBinary
+
+
+PatchBinary = load_patch_binary()
 registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
 index = json.loads(INDEX_PATH.read_text(encoding="utf-8"))
 curated = [entry for entry in registry["configurations"] if not entry.get("experimental")]
 for entry in curated:
-    definition = index[str(entry["codec"]["moduleIndex"])]
+    module_index = int(entry["codec"]["moduleIndex"])
+    definition = index[str(module_index)]
+    selected = {
+        key: definition["options"][key][option_index]
+        for key, option_index in entry["codec"]["optionIndices"].items()
+    }
     entry["options"] = [
         {
             "key": key,
@@ -49,6 +74,17 @@ for entry in curated:
         }
         for key, values in definition.get("options", {}).items()
     ]
+    for parameter in entry["parameters"]:
+        metadata = definition["param_defaults"][parameter["key"]]
+        parameter["range"] = safe_range(
+            scaled_parameter_range(
+                module_index,
+                parameter["key"],
+                metadata,
+                selected,
+            ),
+            preserve_numeric_type=True,
+        )
 entries = list(curated)
 curated_defaults = {
     (entry["codec"]["moduleIndex"], tuple(sorted(entry["codec"]["optionIndices"].items())))
@@ -62,11 +98,17 @@ for module_index, definition in index.items():
     signature = (int(module_index), tuple(sorted(options.items())))
     if signature in curated_defaults:
         continue
-    active_blocks = {
-        key: block
-        for key, block in definition.get("blocks", {}).items()
-        if block.get("isDefault")
+    selected_options = {
+        key: definition["options"][key][option_index]
+        for key, option_index in options.items()
     }
+    active_blocks = PatchBinary()._calc_blocks(
+        {
+            "mod_idx": int(module_index),
+            "version": 0,
+            "options": selected_options,
+        }
+    )
     parameters = []
     for key, metadata in definition.get("param_defaults", {}).items():
         block = active_blocks.get(key)
@@ -79,7 +121,14 @@ for module_index, definition in index.items():
                 "name": title(key),
                 "defaultRawValue": max(0, min(65_535, round(normalized * 65_535))),
                 "unit": metadata.get("unit"),
-                "range": safe_range(metadata.get("range", [])),
+                "range": safe_range(
+                    scaled_parameter_range(
+                        int(module_index),
+                        key,
+                        metadata,
+                        selected_options,
+                    )
+                ),
             }
         )
     endpoints = [
@@ -109,7 +158,7 @@ for module_index, definition in index.items():
             "description": " ".join(definition.get("description", "").split()),
             "role": "effect",
             "cpu": float(definition.get("cpu", 0)),
-            "blockCount": int(definition.get("default_blocks", len(active_blocks) or 1)),
+            "blockCount": len(active_blocks) or 1,
             "experimental": True,
             "options": option_metadata,
             "parameters": parameters,

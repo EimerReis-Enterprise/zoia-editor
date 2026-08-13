@@ -15,6 +15,7 @@ from service.module_catalog import (
     ModuleConfiguration,
     default_raw_value,
     module_definition,
+    scaled_parameter_range,
     selected_options,
 )
 
@@ -645,7 +646,12 @@ def resolve_experimental_configuration(
                     float(item)
                     if isinstance(item, (int, float)) and math.isfinite(item)
                     else None
-                    for item in metadata.get("range", [])
+                    for item in scaled_parameter_range(
+                        module_index,
+                        key,
+                        metadata,
+                        selected_options(configuration),
+                    )
                 ],
             }
         )

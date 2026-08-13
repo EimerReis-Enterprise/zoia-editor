@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+import { connectionStrengthRawForTargetRange } from '#/lib/domain/control-mapping'
+import { formatParameterValue } from '#/lib/domain/parameter-value'
+
 import { patchDocumentModuleColorId } from './patch-colors'
 import { projectPatchDraft } from './patch-draft'
 import type { ModuleCatalogEntry, PatchDraft } from './patch-draft'
@@ -19,6 +22,7 @@ const patchDocumentParameterSchema = z.object({
   rawValue: rawValueSchema,
   displayValue: z.string(),
   decoded: z.boolean(),
+  defaultRawValue: z.number().int().min(0).max(65_535).optional(),
   unit: z.string().nullable().optional(),
   range: z.array(z.number().nullable()).optional(),
 })
@@ -573,7 +577,7 @@ function setModuleParameterRawValue(
         ? {
             ...candidate,
             rawValue,
-            displayValue: `${((rawValue / 65_535) * 100).toFixed(1)}% raw range`,
+            displayValue: formatParameterValue(rawValue, candidate),
           }
         : candidate,
     ),
@@ -654,7 +658,10 @@ export function createPatchDocumentControlMapping(
         sourceEndpoint: source.name,
         targetEndpoint: target.name,
         kind: 'cv',
-        strengthRaw: mapping.maximumRaw - mapping.minimumRaw,
+        strengthRaw: connectionStrengthRawForTargetRange(
+          mapping.minimumRaw,
+          mapping.maximumRaw,
+        ),
       },
     ],
     sequences: {
@@ -718,7 +725,13 @@ export function setPatchDocumentControlMappingRange(
     ),
     connections: document.connections.map((candidate) =>
       candidate.id === connection.id
-        ? { ...candidate, strengthRaw: maximumRaw - minimumRaw }
+        ? {
+            ...candidate,
+            strengthRaw: connectionStrengthRawForTargetRange(
+              minimumRaw,
+              maximumRaw,
+            ),
+          }
         : candidate,
     ),
   }
@@ -937,7 +950,7 @@ export function applyParameterEditsToDocument(
             : {
                 ...parameter,
                 rawValue,
-                displayValue: `${((rawValue / 65_535) * 100).toFixed(1)}% raw range`,
+                displayValue: formatParameterValue(rawValue, parameter),
               }
         }),
       }
@@ -955,8 +968,12 @@ export function createCatalogParameter(
     kind: 'parameter' as const,
     name: parameter.name,
     rawValue: parameter.defaultRawValue,
-    displayValue: `${((parameter.defaultRawValue / 65_535) * 100).toFixed(1)}% raw range`,
+    displayValue: formatParameterValue(
+      parameter.defaultRawValue,
+      parameter,
+    ),
     decoded: true,
+    defaultRawValue: parameter.defaultRawValue,
     unit: parameter.unit,
     range: parameter.range,
   }

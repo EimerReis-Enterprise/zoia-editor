@@ -109,7 +109,7 @@ describe('Patch Draft authoring operations', () => {
 
     expect(projection.modules[1].parameters[0]).toMatchObject({
       rawValue: 65_535,
-      displayValue: '0.00 dB',
+      displayValue: '0.0 dB',
     })
   })
 })

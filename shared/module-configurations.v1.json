@@ -881,11 +881,11 @@
           "defaultRawValue": 0,
           "unit": "ms",
           "range": [
-            0.02,
-            0.6,
-            18.3,
-            540,
-            16000
+            0.00125,
+            0.0375,
+            1.14375,
+            33.75,
+            1000.0
           ]
         }
       ],
@@ -980,11 +980,11 @@
           "defaultRawValue": 0,
           "unit": "ms",
           "range": [
-            0.02,
-            0.6,
-            18.3,
-            540,
-            16000
+            0.00125,
+            0.0375,
+            1.14375,
+            33.75,
+            1000.0
           ]
         },
         {
@@ -6496,55 +6496,6 @@
           "name": "Audio Output 1",
           "kind": "audioOutput",
           "hardwareBlockIndex": 2
-        },
-        {
-          "id": "audio_output_3",
-          "key": "audio_output_3",
-          "name": "Audio Output 3",
-          "kind": "audioOutput",
-          "hardwareBlockIndex": 4
-        },
-        {
-          "id": "audio_output_5",
-          "key": "audio_output_5",
-          "name": "Audio Output 5",
-          "kind": "audioOutput",
-          "hardwareBlockIndex": 6
-        },
-        {
-          "id": "audio_output_7",
-          "key": "audio_output_7",
-          "name": "Audio Output 7",
-          "kind": "audioOutput",
-          "hardwareBlockIndex": 8
-        },
-        {
-          "id": "audio_output_9",
-          "key": "audio_output_9",
-          "name": "Audio Output 9",
-          "kind": "audioOutput",
-          "hardwareBlockIndex": 10
-        },
-        {
-          "id": "audio_output_11",
-          "key": "audio_output_11",
-          "name": "Audio Output 11",
-          "kind": "audioOutput",
-          "hardwareBlockIndex": 12
-        },
-        {
-          "id": "audio_output_13",
-          "key": "audio_output_13",
-          "name": "Audio Output 13",
-          "kind": "audioOutput",
-          "hardwareBlockIndex": 14
-        },
-        {
-          "id": "audio_output_15",
-          "key": "audio_output_15",
-          "name": "Audio Output 15",
-          "kind": "audioOutput",
-          "hardwareBlockIndex": 16
         }
       ],
       "codec": {
@@ -7776,16 +7727,16 @@
       ],
       "parameters": [
         {
-          "key": "delay_time",
-          "name": "Delay Time",
-          "defaultRawValue": 32768,
-          "unit": "ms",
+          "key": "side_gain",
+          "name": "Side Gain",
+          "defaultRawValue": 54394,
+          "unit": "dB",
           "range": [
-            2.0,
-            10.25,
-            18.5,
-            26.75,
-            34.98
+            -40.0,
+            -25.0,
+            -10.0,
+            5.0,
+            20.0
           ]
         }
       ],
@@ -7798,11 +7749,18 @@
           "hardwareBlockIndex": 0
         },
         {
-          "id": "delay_time",
-          "key": "delay_time",
-          "name": "Delay Time",
+          "id": "audio_in_2",
+          "key": "audio_in_2",
+          "name": "Audio In 2",
+          "kind": "audioInput",
+          "hardwareBlockIndex": 1
+        },
+        {
+          "id": "side_gain",
+          "key": "side_gain",
+          "name": "Side Gain",
           "kind": "cvInput",
-          "hardwareBlockIndex": 3
+          "hardwareBlockIndex": 2
         },
         {
           "id": "audio_out_1",

@@ -823,13 +823,13 @@ function PatchWorkbenchSurface() {
       onDrop={onDrop}
     >
       <header className="instrument-bar">
-        <div className="brand-lockup" aria-label="ZOIA Patch Visualizer">
+        <div className="brand-lockup" aria-label="ZOIA Scope patch editor">
           <span className="brand-mark" aria-hidden="true">
             <Radio size={22} />
           </span>
           <div>
             <strong>ZOIA / SCOPE</strong>
-            <span>Logical patch analyzer</span>
+            <span>Logical patch editor</span>
           </div>
         </div>
 
@@ -845,9 +845,9 @@ function PatchWorkbenchSurface() {
           </div>
         ) : (
           <div className="patch-readout is-idle">
-            <span>CHANNEL A</span>
-            <strong>NO PATCH</strong>
-            <small>Waiting for local input</small>
+            <span>LOCAL WORKSPACE</span>
+            <strong>READY</strong>
+            <small>Create, open, or recover a Patch Document</small>
           </div>
         )}
 
@@ -1233,14 +1233,14 @@ function PatchWorkbenchSurface() {
             </div>
             <div className="empty-state__content">
               <h1>
-                Start with signal.
+                See the signal.
                 <br />
-                Build the patch.
+                Shape the patch.
               </h1>
               <p>
-                Create a prewired mono Signal Chain, insert audio Modules
-                directly into its path, tune exact parameters, and export an
-                experimental ZOIA binary.
+                Open an existing ZOIA patch as a readable logical graph, or
+                author a portable Patch Document from mono signal chain to
+                advanced stereo, CV, and MIDI-controlled routing.
               </p>
               <div className="empty-actions">
                 <button
@@ -1249,14 +1249,14 @@ function PatchWorkbenchSurface() {
                   onClick={() => setIsNewPatchOpen(true)}
                   disabled={isCatalogLoading}
                 >
-                  <FilePlus2 size={18} /> New mono patch
+                  <FilePlus2 size={18} /> Create Patch Document
                 </button>
                 <button
                   className="secondary-action"
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <FileUp size={17} /> Import .bin or .json
+                  <FileUp size={17} /> Open .bin or .zoia.json
                 </button>
                 {recoverableSession ? (
                   <button
@@ -1279,12 +1279,26 @@ function PatchWorkbenchSurface() {
                     type="button"
                     onClick={() => setPatch(demoPatch)}
                   >
-                    <FlaskConical size={17} /> Inspect demo
+                    <FlaskConical size={17} /> Explore demo patch
                   </button>
                 )}
               </div>
-              <small>
-                LOCAL WORKSPACE · BINARY CODEC TRANSIENT · ORIGINAL FILES UNTOUCHED
+              <div className="empty-capabilities" aria-label="Editor capabilities">
+                <div>
+                  <strong>TRACE</strong>
+                  <span>Logical routing · decoded Hz, dB, time, and raw fallbacks</span>
+                </div>
+                <div>
+                  <strong>AUTHOR</strong>
+                  <span>Mono or stereo · audio, CV, MIDI control, and parameter ranges</span>
+                </div>
+                <div>
+                  <strong>OWN</strong>
+                  <span>Portable JSON · local recovery, version history, and binary export</span>
+                </div>
+              </div>
+              <small className="empty-trust">
+                PATCH DOCUMENTS STAY LOCAL · BINARY CODEC TRANSIENT · ORIGINALS UNTOUCHED
               </small>
               <button
                 className="privacy-link"
@@ -1370,6 +1384,7 @@ function PatchWorkbenchSurface() {
           }}
           onCreateControlMapping={createControlMapping}
           onSetControlMappingRange={setControlMappingRange}
+          onSetConnectionStrength={setConnectionStrength}
           onSetSourceCalibration={setSourceCalibration}
           onRemoveConnection={removeConnection}
           onRemove={() => removeModule(selectedModuleId)}

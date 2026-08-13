@@ -1,7 +1,10 @@
 import {
-  calibrateControlMappingMaximumRaw,
-  controlMappingRawValueAtPercent,
-} from '#/lib/domain/patch'
+  calibrateControlMappingStrengthRaw,
+  controlMappingMaximumRaw,
+  controlMappingSaturationSourcePercent,
+  controlMappingTargetRawAtSourcePercent,
+} from '#/lib/domain/control-mapping'
+import { formatParameterValue } from '#/lib/domain/parameter-value'
 import type {
   PatchDocumentConnection,
   PatchDocumentModule,
@@ -19,6 +22,7 @@ type ControlMappingRowProps = {
     minimumRaw: number,
     maximumRaw: number,
   ) => void
+  onSetStrength: (connectionId: string, strengthRaw: number) => void
   onRemove: (connectionId: string) => void
 }
 
@@ -31,11 +35,19 @@ export function ControlMappingRow({
   parameter,
   sourceFullScaleValue,
   onSetRange,
+  onSetStrength,
   onRemove,
 }: ControlMappingRowProps) {
   const initialMinimum =
     typeof parameter?.rawValue === 'number' ? parameter.rawValue : 0
-  const initialMaximum = Math.min(65_535, initialMinimum + mapping.strengthRaw)
+  const initialMaximum = controlMappingMaximumRaw(
+    initialMinimum,
+    mapping.strengthRaw,
+  )
+  const saturationSourcePercent = controlMappingSaturationSourcePercent(
+    initialMinimum,
+    mapping.strengthRaw,
+  )
   const [minimum, setMinimum] = useState(initialMinimum)
   const [maximum, setMaximum] = useState(initialMaximum)
   const [sourcePositionValue, setSourcePositionValue] = useState(80)
@@ -44,26 +56,36 @@ export function ControlMappingRow({
     100,
     (sourcePositionValue / sourceFullScaleValue) * 100,
   )
-  const calibratedMaximum = calibrateControlMappingMaximumRaw(
+  const calibratedStrength = calibrateControlMappingStrengthRaw(
     minimum,
     sourcePositionPercent,
     targetRaw,
   )
-  const calibratedPreviewRaw = controlMappingRawValueAtPercent(
+  const calibratedMaximum = controlMappingMaximumRaw(
     minimum,
-    calibratedMaximum,
+    calibratedStrength,
+  )
+  const calibratedPreviewRaw = controlMappingTargetRawAtSourcePercent(
+    minimum,
+    calibratedStrength,
     sourcePositionPercent,
   )
   const saturates = targetRaw > calibratedPreviewRaw
   const targetName = targetModule?.name ?? 'Unknown Module'
+  const formatTargetValue = (rawValue: number) =>
+    parameter ? formatParameterValue(rawValue, parameter) : `${rawValue} raw`
 
-  const commitRange = () => onSetRange(mapping.id, minimum, maximum)
+  const commitRange = () => {
+    if (minimum !== initialMinimum || maximum !== initialMaximum)
+      onSetRange(mapping.id, minimum, maximum)
+  }
 
   return (
     <div className="mapping-table__row">
       <div className="mapping-table__target">
         <strong>{targetName}</strong>
         <span>{target?.name ?? mapping.targetEndpoint}</span>
+        <small>End at {saturationSourcePercent.toFixed(1)}% source</small>
       </div>
       <label className="mapping-table__value">
         <span className="sr-only">{targetName} minimum raw value</span>
@@ -76,6 +98,7 @@ export function ControlMappingRow({
           onChange={(event) => setMinimum(clampRaw(Number(event.target.value)))}
           onBlur={commitRange}
         />
+        <small>{formatTargetValue(minimum)}</small>
       </label>
       <label className="mapping-table__value">
         <span className="sr-only">{targetName} maximum raw value</span>
@@ -88,6 +111,7 @@ export function ControlMappingRow({
           onChange={(event) => setMaximum(clampRaw(Number(event.target.value)))}
           onBlur={commitRange}
         />
+        <small>{formatTargetValue(maximum)}</small>
       </label>
       <div className="mapping-table__calibration">
         <label>
@@ -120,12 +144,15 @@ export function ControlMappingRow({
         </label>
         <button
           type="button"
-          onClick={() => onSetRange(mapping.id, minimum, calibratedMaximum)}
+          onClick={() => {
+            setMaximum(calibratedMaximum)
+            onSetStrength(mapping.id, calibratedStrength)
+          }}
         >
           Set
         </button>
         {saturates ? (
-          <small>Clamps at {calibratedPreviewRaw}</small>
+          <small>Clamps at {formatTargetValue(calibratedPreviewRaw)}</small>
         ) : null}
       </div>
       <button

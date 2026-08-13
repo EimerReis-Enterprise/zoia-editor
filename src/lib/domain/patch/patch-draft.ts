@@ -1,3 +1,5 @@
+import { formatParameterValue } from '#/lib/domain/parameter-value'
+
 import { DEFAULT_ZOIA_MODULE_COLOR_ID } from './patch-colors'
 import type { ZoiaModuleColorId } from './patch-colors'
 import type { PatchProjection } from './patch'
@@ -297,40 +299,6 @@ export function setDraftParameter(
   return { ...draft, modules }
 }
 
-function interpolateRange(
-  rawValue: number,
-  range: readonly (number | null)[],
-): number | null {
-  if (range.length < 2) return null
-  const normalized = rawValue / 65_535
-  const segments = range.length - 1
-  const scaled = Math.min(segments, normalized * segments)
-  const index = Math.min(segments - 1, Math.floor(scaled))
-  const start = range[index]
-  const end = range[index + 1]
-  if (start === null || end === null) return null
-  return start + (end - start) * (scaled - index)
-}
-
-function displayParameterValue(
-  rawValue: number,
-  parameter: ModuleCatalogParameter,
-): string {
-  const decoded = interpolateRange(rawValue, parameter.range)
-  if (decoded === null) {
-    if (rawValue === 0 && parameter.range[0] === null) {
-      return `−∞ ${parameter.unit ?? ''}`.trim()
-    }
-    if (rawValue === 65_535 && parameter.range.at(-1) === null) {
-      return `∞ ${parameter.unit ?? ''}`.trim()
-    }
-    return `${((rawValue / 65_535) * 100).toFixed(1)}% raw range`
-  }
-  const precision =
-    Math.abs(decoded) >= 100 ? 0 : Math.abs(decoded) >= 10 ? 1 : 2
-  return `${decoded.toFixed(precision)}${parameter.unit ? ` ${parameter.unit}` : ''}`
-}
-
 export function projectPatchDraft(
   draft: PatchDraft,
   catalog: readonly ModuleCatalogEntry[],
@@ -385,7 +353,7 @@ export function projectPatchDraft(
           key: parameter.key,
           kind: 'parameter' as const,
           name: parameter.name,
-          displayValue: displayParameterValue(rawValue, parameter),
+          displayValue: formatParameterValue(rawValue, parameter),
           rawValue,
           decoded: true,
         }
