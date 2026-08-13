@@ -20,13 +20,14 @@ FIXTURE_ARCHIVE = (
 
 
 def test_health_identifies_the_pinned_codec_revision():
-    response = TestClient(app).get("/health")
+    for path in ("/health", "/api/health"):
+        response = TestClient(app).get(path)
 
-    assert response.status_code == 200
-    assert response.json() == {
-        "status": "ready",
-        "zoiaLibRevision": "9a959c4ef2ecbaa82f6525761472058bbead7d66",
-    }
+        assert response.status_code == 200
+        assert response.json() == {
+            "status": "ready",
+            "zoiaLibRevision": "9a959c4ef2ecbaa82f6525761472058bbead7d66",
+        }
 
 
 def test_rejects_oversized_binary_before_parsing():

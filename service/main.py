@@ -124,6 +124,7 @@ async def _read_binary(file: UploadFile) -> bytes:
 
 
 @app.get("/health")
+@app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ready", "zoiaLibRevision": ZOIA_LIB_REVISION}
 

@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import json
 import math
+import os
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 from typing import Any, Literal
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULE_INDEX_PATH = (
-    ROOT / ".vendor" / "zoia_lib" / "zoia_lib" / "common" / "schemas" / "ModuleIndex.json"
-)
+ZOIA_LIB_PATH = Path(os.environ.get("ZOIA_LIB_PATH", ROOT / ".vendor" / "zoia_lib"))
+MODULE_INDEX_PATH = ZOIA_LIB_PATH / "zoia_lib" / "common" / "schemas" / "ModuleIndex.json"
 REGISTRY_PATH = ROOT / "shared" / "module-configurations.v1.json"
 
 
