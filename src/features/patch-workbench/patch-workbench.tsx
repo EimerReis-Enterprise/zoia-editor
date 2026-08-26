@@ -951,28 +951,6 @@ function PatchWorkbenchSurface() {
         )}
 
         <div className="instrument-actions">
-          <span
-            className={`status-light ${patch ? 'is-armed' : ''}`}
-            aria-hidden="true"
-          />
-          <span className="status-copy">
-            {isImporting
-              ? 'DECODING'
-              : patchDocument
-                ? 'DOCUMENT READY'
-                : patch
-                  ? 'SIGNAL LOCKED'
-                  : 'STANDBY'}
-          </span>
-          <button
-            className="theme-toggle"
-            type="button"
-            onClick={toggleTheme}
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          >
-            {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-          </button>
           <button
             className="instrument-button is-secondary"
             type="button"
@@ -986,6 +964,20 @@ function PatchWorkbenchSurface() {
               <FilePlus2 size={17} />
             )}
             New patch
+          </button>
+          <button
+            className="instrument-button"
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting}
+            title="Import Patch"
+          >
+            {isImporting ? (
+              <RotateCcw className="is-spinning" size={17} />
+            ) : (
+              <FileUp size={17} />
+            )}
+            {isImporting ? 'Acquiring…' : 'Import patch'}
           </button>
           <button
             className="instrument-button is-secondary"
@@ -1007,18 +999,13 @@ function PatchWorkbenchSurface() {
             Report issue
           </button>
           <button
-            className="instrument-button"
+            className="theme-toggle"
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isImporting}
-            title="Import Patch"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           >
-            {isImporting ? (
-              <RotateCcw className="is-spinning" size={17} />
-            ) : (
-              <FileUp size={17} />
-            )}
-            {isImporting ? 'Acquiring…' : 'Import patch'}
+            {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
           </button>
           <input
             ref={fileInputRef}
