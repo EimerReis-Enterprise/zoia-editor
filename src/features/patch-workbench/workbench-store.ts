@@ -46,7 +46,6 @@ import type {
 
 export type ColorTheme = 'dark' | 'light'
 type CompilationStatus = 'idle' | 'pending' | 'valid' | 'invalid'
-type HardwareTarget = 'zoia-pedal' | 'euroburo'
 type Toast = { tone: 'warning' | 'error'; message: string }
 
 function preferredTheme(): ColorTheme {
@@ -90,16 +89,6 @@ type WorkbenchState = {
   compilation: PatchCompilation | null
   compilationError: string | null
   toast: Toast | null
-  experimentalMode: boolean
-  hardwareTarget: HardwareTarget
-  firmwareVersion: string
-  verifiedBy: string
-  setExperimentalMode: (enabled: boolean) => void
-  setHardwareProfile: (profile: {
-    hardwareTarget?: HardwareTarget
-    firmwareVersion?: string
-    verifiedBy?: string
-  }) => void
   setPatch: (patch: PatchProjection, sourceFile?: File) => void
   setPatchDocument: (document: PatchDocument) => void
   setVersionedPatchDocument: (document: PatchDocument) => void
@@ -122,10 +111,7 @@ type WorkbenchState = {
     targetModuleId: string,
     targetEndpointId: string,
   ) => void
-  setWorkspacePosition: (
-    moduleId: string,
-    position: WorkspacePosition,
-  ) => void
+  setWorkspacePosition: (moduleId: string, position: WorkspacePosition) => void
   resetWorkspaceLayout: (positions: WorkspaceLayout) => void
   createControlMapping: (mapping: ControlMappingInput) => void
   setConnectionStrength: (connectionId: string, strengthRaw: number) => void
@@ -193,12 +179,6 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
   compilation: null,
   compilationError: null,
   toast: null,
-  experimentalMode: false,
-  hardwareTarget: 'euroburo',
-  firmwareVersion: '',
-  verifiedBy: '',
-  setExperimentalMode: (experimentalMode) => set({ experimentalMode }),
-  setHardwareProfile: (profile) => set(profile),
   setPatch: (patch, sourceFile = undefined) =>
     set({
       patch,

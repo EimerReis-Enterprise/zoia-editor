@@ -123,7 +123,7 @@ export function filterModuleCatalog(
   catalog: readonly ModuleCatalogEntry[],
   authoringMode: 'linear' | 'free',
   query: string,
-  includeExperimental = false,
+  includeExperimental = true,
 ): ModuleCatalogEntry[] {
   const normalizedQuery = query.trim().toLowerCase()
   return catalog.filter((configuration) => {

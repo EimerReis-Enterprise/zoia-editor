@@ -18,6 +18,7 @@ import type {
   OnReconnect,
 } from '@xyflow/react'
 import {
+  Bug,
   Cable,
   CheckCircle2,
   Download,
@@ -63,6 +64,7 @@ import {
   workspaceLayout,
 } from '#/lib/domain/patch'
 import type { PatchDraftSession, PatchVersion } from '#/lib/domain/patch'
+import { createCompatibilityReportUrl } from '#/lib/domain/compatibility-report'
 import {
   patchStorageProvenance,
   withPatchStorageProvenance,
@@ -106,6 +108,15 @@ function PatchWorkbenchSurface() {
   const [isCodecDisclosureOpen, setIsCodecDisclosureOpen] = useState(false)
   const [isPatchStorageOpen, setIsPatchStorageOpen] = useState(false)
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false)
+  const [isReportOpen, setIsReportOpen] = useState(false)
+  const [reportKind, setReportKind] = useState<'app' | 'module'>('app')
+  const [reportModuleId, setReportModuleId] = useState('')
+  const [reportHardware, setReportHardware] = useState('Euroburo')
+  const [reportFirmware, setReportFirmware] = useState('')
+  const [reportDescription, setReportDescription] = useState('')
+  const [reportExpected, setReportExpected] = useState('')
+  const [reportActual, setReportActual] = useState('')
+  const [patchHash, setPatchHash] = useState('')
   const [isSavingVersion, setIsSavingVersion] = useState(false)
   const [isSaveVersionOpen, setIsSaveVersionOpen] = useState(false)
   const [isVersionInspectorOpen, setIsVersionInspectorOpen] = useState(false)
@@ -157,12 +168,6 @@ function PatchWorkbenchSurface() {
     compilation,
     compilationError,
     toast,
-    experimentalMode,
-    hardwareTarget,
-    firmwareVersion,
-    verifiedBy,
-    setExperimentalMode,
-    setHardwareProfile,
     setPatch,
     setPatchDocument,
     setVersionedPatchDocument,
@@ -282,14 +287,62 @@ function PatchWorkbenchSurface() {
         moduleCatalog,
         isFreeAuthoring ? 'free' : 'linear',
         libraryQuery,
-        experimentalMode,
       ),
-    [experimentalMode, isFreeAuthoring, libraryQuery, moduleCatalog],
+    [isFreeAuthoring, libraryQuery, moduleCatalog],
   )
   const groupedCatalog = useMemo(
     () => groupModuleCatalog(filteredCatalog),
     [filteredCatalog],
   )
+  const reportUrl = useMemo(
+    () =>
+      createCompatibilityReportUrl({
+        kind: reportKind,
+        description: reportKind === 'module' ? reportActual : reportDescription,
+        expected: reportExpected,
+        actual: reportActual,
+        hardwareTarget: reportHardware,
+        firmwareVersion: reportFirmware,
+        patch: patchDocument,
+        patchHash,
+        moduleId: reportModuleId,
+      }),
+    [
+      patchDocument,
+      patchHash,
+      reportActual,
+      reportDescription,
+      reportExpected,
+      reportFirmware,
+      reportHardware,
+      reportKind,
+      reportModuleId,
+    ],
+  )
+
+  useEffect(() => {
+    if (!patchDocument) {
+      setPatchHash('')
+      return
+    }
+    let active = true
+    void crypto.subtle
+      .digest(
+        'SHA-256',
+        new TextEncoder().encode(serializePatchDocument(patchDocument)),
+      )
+      .then((digest) => {
+        if (!active) return
+        setPatchHash(
+          [...new Uint8Array(digest)]
+            .map((byte) => byte.toString(16).padStart(2, '0'))
+            .join(''),
+        )
+      })
+    return () => {
+      active = false
+    }
+  }, [patchDocument])
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -327,9 +380,7 @@ function PatchWorkbenchSurface() {
       .catch(() => setPatchHistory([{ metadata, document: patchDocument }]))
   }, [
     patchDocument?.documentId,
-    patchDocument
-      ? patchVersionMetadata(patchDocument)?.version
-      : undefined,
+    patchDocument ? patchVersionMetadata(patchDocument)?.version : undefined,
   ])
 
   useEffect(() => {
@@ -505,9 +556,13 @@ function PatchWorkbenchSurface() {
     if (!files.length) return
     try {
       const versions = await Promise.all(
-        files.map(async (file) => parsePatchVersion(JSON.parse(await file.text()))),
+        files.map(async (file) =>
+          parsePatchVersion(JSON.parse(await file.text())),
+        ),
       )
-      const seriesIds = new Set(versions.map((version) => version.metadata.seriesId))
+      const seriesIds = new Set(
+        versions.map((version) => version.metadata.seriesId),
+      )
       if (seriesIds.size !== 1) {
         throw new Error('Choose versions from one Patch History at a time.')
       }
@@ -527,7 +582,9 @@ function PatchWorkbenchSurface() {
       setIsVersionInspectorOpen(true)
     } catch (error) {
       setImportError(
-        error instanceof Error ? error.message : 'Patch Versions could not be loaded.',
+        error instanceof Error
+          ? error.message
+          : 'Patch Versions could not be loaded.',
       )
     }
   }
@@ -590,17 +647,13 @@ function PatchWorkbenchSurface() {
         return false
       const source = patchDocument.modules
         .find((module) => module.id === connection.source)
-        ?.endpoints.find(
-          (endpoint) => endpoint.id === connection.sourceHandle,
-        )
+        ?.endpoints.find((endpoint) => endpoint.id === connection.sourceHandle)
       const target = patchDocument.modules
         .find((module) => module.id === connection.target)
-        ?.endpoints.find(
-          (endpoint) => endpoint.id === connection.targetHandle,
-        )
+        ?.endpoints.find((endpoint) => endpoint.id === connection.targetHandle)
       return Boolean(
         (source?.kind === 'audioOutput' && target?.kind === 'audioInput') ||
-          (source?.kind === 'cvOutput' && target?.kind === 'cvInput'),
+        (source?.kind === 'cvOutput' && target?.kind === 'cvInput'),
       )
     },
     [isFreeAuthoring, patchDocument],
@@ -663,6 +716,17 @@ function PatchWorkbenchSurface() {
         maxZoom: 1.05,
       })
     })
+  }
+
+  const openReportDialog = () => {
+    setReportKind('app')
+    setReportModuleId(selectedModuleId ?? patchDocument?.modules[0]?.id ?? '')
+    setReportHardware('Euroburo')
+    setReportFirmware('')
+    setReportDescription('')
+    setReportExpected('')
+    setReportActual('')
+    setIsReportOpen(true)
   }
 
   const openModuleLibrary = () => {
@@ -732,7 +796,11 @@ function PatchWorkbenchSurface() {
     }
     setIsSavingVersion(true)
     try {
-      const version = createPatchVersion(currentDocument, patchHistory, versionMessage)
+      const version = createPatchVersion(
+        currentDocument,
+        patchHistory,
+        versionMessage,
+      )
       await savePatchVersion(version)
       setVersionedPatchDocument(version.document)
       setPatchHistory((history) => [...history, version])
@@ -753,7 +821,9 @@ function PatchWorkbenchSurface() {
       setIsVersionInspectorOpen(true)
     } catch (error) {
       setImportError(
-        error instanceof Error ? error.message : 'Patch Version could not be saved.',
+        error instanceof Error
+          ? error.message
+          : 'Patch Version could not be saved.',
       )
     } finally {
       setIsSavingVersion(false)
@@ -862,7 +932,7 @@ function PatchWorkbenchSurface() {
             <strong>{patch.name}</strong>
             <small>
               {patchDraft ? (
-                `MONO · ${isDraftSaved ? 'RECOVERY SAVED' : 'SAVING RECOVERY'} · EXPERIMENTAL`
+                `MONO · ${isDraftSaved ? 'RECOVERY SAVED' : 'SAVING RECOVERY'}`
               ) : provenance ? (
                 <a href={provenance.url} target="_blank" rel="noreferrer">
                   PATCHSTORAGE · {provenance.author.name}
@@ -928,6 +998,15 @@ function PatchWorkbenchSurface() {
             Browse PatchStorage
           </button>
           <button
+            className="instrument-button is-secondary"
+            type="button"
+            onClick={openReportDialog}
+            title="Report issue"
+          >
+            <Bug size={17} />
+            Report issue
+          </button>
+          <button
             className="instrument-button"
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -984,50 +1063,6 @@ function PatchWorkbenchSurface() {
               <Redo2 size={16} />
             </button>
           </div>
-          {isFreeAuthoring ? (
-            <div className="experimental-controls">
-              <label className="experimental-toggle">
-                <input
-                  type="checkbox"
-                  checked={experimentalMode}
-                  onChange={(event) => setExperimentalMode(event.target.checked)}
-                />
-                Experimental
-              </label>
-              {experimentalMode ? (
-                <div className="hardware-profile" aria-label="Hardware verification profile">
-                  <select
-                    aria-label="Hardware target"
-                    value={hardwareTarget}
-                    onChange={(event) =>
-                      setHardwareProfile({
-                        hardwareTarget: event.target.value as 'zoia-pedal' | 'euroburo',
-                      })
-                    }
-                  >
-                    <option value="zoia-pedal">ZOIA Pedal</option>
-                    <option value="euroburo">Euroburo</option>
-                  </select>
-                  <input
-                    aria-label="Firmware version"
-                    placeholder="Firmware"
-                    value={firmwareVersion}
-                    onChange={(event) =>
-                      setHardwareProfile({ firmwareVersion: event.target.value })
-                    }
-                  />
-                  <input
-                    aria-label="Verifier name"
-                    placeholder="Verifier"
-                    value={verifiedBy}
-                    onChange={(event) =>
-                      setHardwareProfile({ verifiedBy: event.target.value })
-                    }
-                  />
-                </div>
-              ) : null}
-            </div>
-          ) : null}
           {patchDraft || isFreeAuthoring ? (
             <button
               className="insert-module-button"
@@ -1102,11 +1137,11 @@ function PatchWorkbenchSurface() {
                 ? 'Codec acknowledgement required'
                 : compilationStatus === 'pending'
                   ? `Validating revision ${draftRevision}`
-                : compilationStatus === 'valid'
-                  ? `Revision ${draftRevision} ready`
-                  : compilationStatus === 'invalid'
-                    ? 'Export blocked'
-                    : 'Awaiting validation'}
+                  : compilationStatus === 'valid'
+                    ? `Revision ${draftRevision} ready`
+                    : compilationStatus === 'invalid'
+                      ? 'Export blocked'
+                      : 'Awaiting validation'}
             </span>
             <small>
               {editCount}{' '}
@@ -1149,11 +1184,7 @@ function PatchWorkbenchSurface() {
             ) : (
               <Download size={16} />
             )}
-            {isExporting
-              ? 'Compiling…'
-              : patchDraft
-                ? 'Export experimental .bin'
-                : 'Export test .bin'}
+            {isExporting ? 'Compiling…' : 'Export .bin'}
           </button>
         </section>
       ) : null}
@@ -1324,22 +1355,34 @@ function PatchWorkbenchSurface() {
                   </button>
                 )}
               </div>
-              <div className="empty-capabilities" aria-label="Editor capabilities">
+              <div
+                className="empty-capabilities"
+                aria-label="Editor capabilities"
+              >
                 <div>
                   <strong>TRACE</strong>
-                  <span>Logical routing · decoded Hz, dB, time, and raw fallbacks</span>
+                  <span>
+                    Logical routing · decoded Hz, dB, time, and raw fallbacks
+                  </span>
                 </div>
                 <div>
                   <strong>AUTHOR</strong>
-                  <span>Mono or stereo · audio, CV, MIDI control, and parameter ranges</span>
+                  <span>
+                    Mono or stereo · audio, CV, MIDI control, and parameter
+                    ranges
+                  </span>
                 </div>
                 <div>
                   <strong>OWN</strong>
-                  <span>Portable JSON · local recovery, version history, and binary export</span>
+                  <span>
+                    Portable JSON · local recovery, version history, and binary
+                    export
+                  </span>
                 </div>
               </div>
               <small className="empty-trust">
-                PATCH DOCUMENTS STAY LOCAL · BINARY CODEC TRANSIENT · ORIGINALS UNTOUCHED
+                PATCH DOCUMENTS STAY LOCAL · BINARY CODEC TRANSIENT · ORIGINALS
+                UNTOUCHED
               </small>
               <button
                 className="privacy-link"
@@ -1390,10 +1433,6 @@ function PatchWorkbenchSurface() {
           canEdit={hasAuthoring}
           canRename={isFreeAuthoring}
           canColorize={hasAuthoring}
-          experimentalMode={experimentalMode}
-          hardwareTarget={hardwareTarget}
-          firmwareVersion={firmwareVersion}
-          verifiedBy={verifiedBy}
           canRemove={Boolean(
             (patchDraft &&
               !patchDraft.modules
@@ -1428,7 +1467,7 @@ function PatchWorkbenchSurface() {
               setImportError(
                 error instanceof Error
                   ? error.message
-                  : 'The Experimental option could not be changed.',
+                  : 'The Module Configuration option could not be changed.',
               )
             }
           }}
@@ -1442,37 +1481,39 @@ function PatchWorkbenchSurface() {
         />
       ) : null}
 
-      {patchDocument && inspectedConnectionId ? (() => {
-        const connection = patchDocument.connections.find(
-          (candidate) => candidate.id === inspectedConnectionId,
-        )
-        if (!connection) return null
-        return (
-          <ConnectionInspector
-            key={`${connection.id}-${connection.strengthRaw}`}
-            document={patchDocument}
-            connection={connection}
-            canEdit={hasAuthoring}
-            sourceFullScaleValue={sourceCalibrationFullScaleValue(
-              patchDocument,
-              connection.sourceModuleId,
-              connection.sourceEndpointId,
-            )}
-            onSetRange={setControlMappingRange}
-            onSetStrength={setConnectionStrength}
-            onSetSourceCalibration={setSourceCalibration}
-            onRemove={(connectionId) => {
-              removeConnection(connectionId)
-              setSelectedConnectionId(null)
-              setInspectedConnectionId(null)
-            }}
-            onClose={() => {
-              setSelectedConnectionId(null)
-              setInspectedConnectionId(null)
-            }}
-          />
-        )
-      })() : null}
+      {patchDocument && inspectedConnectionId
+        ? (() => {
+            const connection = patchDocument.connections.find(
+              (candidate) => candidate.id === inspectedConnectionId,
+            )
+            if (!connection) return null
+            return (
+              <ConnectionInspector
+                key={`${connection.id}-${connection.strengthRaw}`}
+                document={patchDocument}
+                connection={connection}
+                canEdit={hasAuthoring}
+                sourceFullScaleValue={sourceCalibrationFullScaleValue(
+                  patchDocument,
+                  connection.sourceModuleId,
+                  connection.sourceEndpointId,
+                )}
+                onSetRange={setControlMappingRange}
+                onSetStrength={setConnectionStrength}
+                onSetSourceCalibration={setSourceCalibration}
+                onRemove={(connectionId) => {
+                  removeConnection(connectionId)
+                  setSelectedConnectionId(null)
+                  setInspectedConnectionId(null)
+                }}
+                onClose={() => {
+                  setSelectedConnectionId(null)
+                  setInspectedConnectionId(null)
+                }}
+              />
+            )
+          })()
+        : null}
 
       {isLibraryOpen && (patchDraft || isFreeAuthoring) ? (
         <aside className="module-library" aria-label="Module library">
@@ -1556,12 +1597,8 @@ function PatchWorkbenchSurface() {
                     >
                       <Plus size={14} aria-hidden="true" />
                       <span>{label}</span>
-                      <small>
-                        {configuration.experimental
-                          ? 'EXPERIMENTAL'
-                          : `${configuration.cpu.toFixed(1)}%`}
-                      </small>
-                      {configuration.experimental ? (
+                      <small>{configuration.cpu.toFixed(1)}%</small>
+                      {configuration.options?.length ? (
                         <span className="module-catalog-parameters">
                           {[
                             ...configuration.parameters.map(
@@ -1586,10 +1623,142 @@ function PatchWorkbenchSurface() {
               </p>
             ) : null}
           </div>
-          <footer>
-            CONFIGURATIONS ARE EXPERIMENTAL UNTIL VERIFIED ON HARDWARE
-          </footer>
+          <footer>TEST EXPORTS ON YOUR HARDWARE BEFORE PERFORMANCE USE</footer>
         </aside>
+      ) : null}
+
+      {isReportOpen ? (
+        <div
+          className="dialog-scrim"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) setIsReportOpen(false)
+          }}
+        >
+          <form
+            className="new-patch-dialog report-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="report-title"
+            onSubmit={(event) => {
+              event.preventDefault()
+              window.open(reportUrl, '_blank', 'noopener,noreferrer')
+              setIsReportOpen(false)
+            }}
+          >
+            <header>
+              <Bug size={22} />
+              <h2 id="report-title">Report issue</h2>
+            </header>
+            <p>
+              GitHub will open in a new tab. Its issue and any Patch Document
+              you attach will be public.
+            </p>
+            <label>
+              <span>REPORT TYPE</span>
+              <select
+                value={reportKind}
+                onChange={(event) =>
+                  setReportKind(event.target.value as 'app' | 'module')
+                }
+              >
+                <option value="app">App issue</option>
+                <option value="module">Module compatibility</option>
+              </select>
+            </label>
+            {reportKind === 'module' ? (
+              <>
+                <label>
+                  <span>MODULE</span>
+                  <select
+                    required
+                    value={reportModuleId}
+                    onChange={(event) => setReportModuleId(event.target.value)}
+                  >
+                    <option value="">Choose Module…</option>
+                    {patchDocument?.modules.map((module) => (
+                      <option key={module.id} value={module.id}>
+                        {module.name} · {module.configurationId ?? module.type}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>HARDWARE</span>
+                  <select
+                    value={reportHardware}
+                    onChange={(event) => setReportHardware(event.target.value)}
+                  >
+                    <option>ZOIA Pedal</option>
+                    <option>Euroburo</option>
+                  </select>
+                </label>
+                <label>
+                  <span>FIRMWARE VERSION</span>
+                  <input
+                    required
+                    value={reportFirmware}
+                    onChange={(event) => setReportFirmware(event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>EXPECTED BEHAVIOR</span>
+                  <textarea
+                    required
+                    rows={3}
+                    value={reportExpected}
+                    onChange={(event) => setReportExpected(event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>ACTUAL BEHAVIOR</span>
+                  <textarea
+                    required
+                    rows={3}
+                    value={reportActual}
+                    onChange={(event) => setReportActual(event.target.value)}
+                  />
+                </label>
+              </>
+            ) : (
+              <label>
+                <span>WHAT HAPPENED?</span>
+                <textarea
+                  required
+                  rows={4}
+                  value={reportDescription}
+                  onChange={(event) => setReportDescription(event.target.value)}
+                />
+              </label>
+            )}
+            {patchDocument ? (
+              <p className="dialog-warning">
+                Patch summary: {patchDocument.modules.length} Modules ·{' '}
+                {patchDocument.connections.length} Connections · SHA-256{' '}
+                {patchHash || 'calculating…'}
+              </p>
+            ) : null}
+            <details className="report-preview">
+              <summary>Preview public GitHub issue</summary>
+              <pre>{new URL(reportUrl).searchParams.get('body')}</pre>
+            </details>
+            <div>
+              <button
+                className="dialog-cancel"
+                type="button"
+                onClick={() => setIsReportOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="dialog-create"
+                type="submit"
+                disabled={reportKind === 'module' && !patchDocument}
+              >
+                <Bug size={16} /> Open GitHub issue
+              </button>
+            </div>
+          </form>
+        </div>
       ) : null}
 
       {isCodecDisclosureOpen ? (
@@ -1622,7 +1791,9 @@ function PatchWorkbenchSurface() {
             <ul>
               <li>Maximum binary size: 1 MiB</li>
               <li>No account or server-side Patch library</li>
-              <li>You can continue JSON authoring if the codec is unavailable</li>
+              <li>
+                You can continue JSON authoring if the codec is unavailable
+              </li>
             </ul>
             <p className="codec-disclosure__links">
               <button
@@ -1742,7 +1913,8 @@ function PatchWorkbenchSurface() {
             <header>
               <FileClock size={22} />
               <h2 id="save-version-title">
-                Save v{String(
+                Save v
+                {String(
                   Math.max(
                     patchVersionMetadata(patchDocument!)?.version ?? 0,
                     ...patchHistory.map((version) => version.metadata.version),

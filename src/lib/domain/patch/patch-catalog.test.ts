@@ -28,6 +28,9 @@ describe('Module Configuration Registry presentation', () => {
     expect(names).toContain('VCA · Stereo')
     expect(names).toContain('SV Filter · Lowpass')
     expect(names).toContain('SV Filter · Highpass')
+    expect(advanced.map((configuration) => configuration.id)).toContain(
+      'experimental-3-default',
+    )
 
     const groups = groupModuleCatalog(advanced)
     const vca = groups.find((group) => group.name === 'VCA')

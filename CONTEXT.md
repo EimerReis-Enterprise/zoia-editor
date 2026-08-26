@@ -84,13 +84,9 @@ _Avoid_: Python catalog, Module Library data
 A specific Module type and option combination whose generated binary has passed structural validation and testing on real ZOIA hardware.
 _Avoid_: Supported module, valid module
 
-**Hardware Verification Record**:
-A durable result that one Module Configuration or parameter was tested on a specified ZOIA hardware target and firmware version. It is evidence for a Verified Module Configuration, not a compiler finding.
-_Avoid_: Verified flag, supported module
-
-**Experimental Export**:
-An exported Patch containing one or more Module configurations that have not completed hardware verification.
-_Avoid_: Invalid patch, beta patch
+**Compatibility Report**:
+A public GitHub issue describing an app problem or a Patch or Module Configuration that failed on ZOIA hardware. It includes a sanitized patch summary and may include a user-attached Patch Document.
+_Avoid_: Module issue, bug report
 
 **Module**:
 A functional unit within a Patch, such as an audio input, delay, LFO, or output.

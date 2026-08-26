@@ -2660,8 +2660,10 @@ button:focus-visible,
   letter-spacing: 0.1em;
 }
 .new-patch-dialog input,
-.new-patch-dialog select {
+.new-patch-dialog select,
+.new-patch-dialog textarea {
   height: 42px;
+  box-sizing: border-box;
   padding: 0 11px;
   border: 1px solid #4c6252;
   border-radius: 4px;
@@ -2669,9 +2671,31 @@ button:focus-visible,
   background: #080f0a;
   color: var(--phosphor-bright);
 }
+.new-patch-dialog textarea {
+  min-height: 82px;
+  padding-block: 9px;
+  resize: vertical;
+}
 .new-patch-dialog input:focus,
-.new-patch-dialog select:focus {
+.new-patch-dialog select:focus,
+.new-patch-dialog textarea:focus {
   border-color: var(--phosphor);
+}
+.report-preview {
+  margin-top: 14px;
+  color: #9daf9f;
+  font-size: 0.7rem;
+}
+.report-preview summary {
+  cursor: pointer;
+}
+.report-preview pre {
+  max-height: 180px;
+  overflow: auto;
+  padding: 9px;
+  border: 1px solid #33443a;
+  border-radius: 4px;
+  white-space: pre-wrap;
 }
 .new-patch-dialog > div {
   display: flex;
@@ -3936,7 +3960,8 @@ html[data-theme='light'] .new-patch-dialog > p {
   color: #536a58;
 }
 html[data-theme='light'] .new-patch-dialog input,
-html[data-theme='light'] .new-patch-dialog select {
+html[data-theme='light'] .new-patch-dialog select,
+html[data-theme='light'] .new-patch-dialog textarea {
   border-color: #8fa292;
   background: #ffffff;
   color: #174322;

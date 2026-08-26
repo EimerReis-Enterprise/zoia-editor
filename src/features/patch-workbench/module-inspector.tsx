@@ -1,22 +1,7 @@
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  BadgeCheck,
-  FlaskConical,
-  Trash2,
-  X,
-} from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowDownLeft, ArrowUpRight, Trash2, X } from 'lucide-react'
+import { useState } from 'react'
 
 import { ControlMappingRow } from './control-mapping-row'
-import {
-  getHardwareVerifications,
-  recordHardwareVerification,
-} from '#/lib/infra/hardware-verification'
-import type {
-  HardwareTarget,
-  HardwareVerificationRecord,
-} from '#/lib/infra/hardware-verification'
 import type { CSSProperties } from 'react'
 
 import { formatParameterValue } from '#/lib/domain/parameter-value'
@@ -45,10 +30,6 @@ type ModuleInspectorProps = {
   canRemove: boolean
   canRename: boolean
   canColorize: boolean
-  experimentalMode: boolean
-  hardwareTarget: HardwareTarget
-  firmwareVersion: string
-  verifiedBy: string
   onBeginParameterGesture: () => void
   onChangeParameter: (
     moduleId: number,
@@ -77,10 +58,7 @@ type ModuleInspectorProps = {
     minimumRaw: number,
     maximumRaw: number,
   ) => void
-  onSetConnectionStrength: (
-    connectionId: string,
-    strengthRaw: number,
-  ) => void
+  onSetConnectionStrength: (connectionId: string, strengthRaw: number) => void
   onSetSourceCalibration: (
     moduleId: string,
     endpointId: string,
@@ -101,10 +79,6 @@ export function ModuleInspector({
   canRemove,
   canRename,
   canColorize,
-  experimentalMode,
-  hardwareTarget,
-  firmwareVersion,
-  verifiedBy,
   onBeginParameterGesture,
   onChangeParameter,
   onCommitParameterGesture,
@@ -123,77 +97,23 @@ export function ModuleInspector({
   const [targetValue, setTargetValue] = useState('')
   const [minimumRaw, setMinimumRaw] = useState(0)
   const [maximumRaw, setMaximumRaw] = useState(65_535)
-  const [verifications, setVerifications] = useState<
-    HardwareVerificationRecord[]
-  >([])
-  const [verificationMenu, setVerificationMenu] = useState<{
-    parameterKey: string
-    parameterName: string
-    x: number
-    y: number
-  } | null>(null)
-  const [verificationNotes, setVerificationNotes] = useState('')
-  const [verificationStatus, setVerificationStatus] = useState<string | null>(
-    null,
-  )
   const module = patch.modules.find((candidate) => candidate.id === moduleId)
   const documentModule = patchDocument?.modules.find(
     (candidate) => candidate.id === moduleId,
   )
   const storedExperimentalConfiguration =
     typeof documentModule?.opaque === 'object' && documentModule.opaque
-      ? (documentModule.opaque as {
-          experimentalConfiguration?: ModuleCatalogEntry
-        }).experimentalConfiguration
+      ? (
+          documentModule.opaque as {
+            experimentalConfiguration?: ModuleCatalogEntry
+          }
+        ).experimentalConfiguration
       : undefined
   const moduleConfiguration =
     moduleCatalog.find(
       (configuration) => configuration.id === documentModule?.configurationId,
     ) ?? storedExperimentalConfiguration
-  useEffect(() => {
-    if (!experimentalMode) return
-    void getHardwareVerifications()
-      .then(setVerifications)
-      .catch(() =>
-        setVerificationStatus('Hardware evidence could not be loaded.'),
-      )
-  }, [experimentalMode])
-
   if (!module) return null
-
-  const profileReady = Boolean(firmwareVersion.trim())
-  const matchesProfile = (record: HardwareVerificationRecord) =>
-    record.hardwareTarget === hardwareTarget &&
-    record.firmwareVersion === firmwareVersion.trim()
-  const configurationVerifications = verifications.filter(
-    (record) =>
-      record.configurationId === documentModule?.configurationId &&
-      !record.parameterKey,
-  )
-  const verify = async (parameterKey?: string) => {
-    if (!documentModule?.configurationId || !profileReady) return
-    setVerificationStatus('Recording…')
-    try {
-      const record = await recordHardwareVerification({
-        data: {
-          configurationId: documentModule.configurationId,
-          parameterKey,
-          hardwareTarget,
-          firmwareVersion: firmwareVersion.trim(),
-          verifiedBy: verifiedBy.trim() || undefined,
-          notes: verificationNotes.trim() || undefined,
-        },
-      })
-      setVerifications((current) => [...current, record])
-      setVerificationMenu(null)
-      setVerificationNotes('')
-      setVerificationStatus('Hardware verification recorded.')
-    } catch (error) {
-      setVerificationStatus(
-        error instanceof Error ? error.message : 'Verification could not be saved.',
-      )
-    }
-  }
 
   const incoming = patch.connections.filter((connection) =>
     module.incomingConnectionIds.includes(connection.id),
@@ -300,70 +220,6 @@ export function ModuleInspector({
         </div>
       </dl>
 
-      {experimentalMode ? (
-        <section className="experimental-verification">
-          <div className="experimental-verification__heading">
-            <span><FlaskConical size={14} /> Experimental verification</span>
-            {configurationVerifications.some(matchesProfile) ? (
-              <strong><BadgeCheck size={14} /> Verified</strong>
-            ) : (
-              <strong>Untested</strong>
-            )}
-          </div>
-          <p>
-            {profileReady
-              ? `${hardwareTarget === 'euroburo' ? 'Euroburo' : 'ZOIA Pedal'} · firmware ${firmwareVersion}`
-              : 'Set a firmware version in the authoring toolbar first.'}
-          </p>
-          <label className="configuration-verification-notes">
-            <span>CONFIGURATION TEST NOTES · OPTIONAL</span>
-            <input
-              value={verificationNotes}
-              onChange={(event) => setVerificationNotes(event.target.value)}
-              placeholder="Loaded, audio passed, endpoints correct…"
-            />
-          </label>
-          <button
-            type="button"
-            disabled={!profileReady || !documentModule?.configurationId}
-            onClick={() => void verify()}
-          >
-            Mark configuration verified
-          </button>
-          {verificationStatus ? <small role="status">{verificationStatus}</small> : null}
-          {verifications.some(
-            (record) => record.configurationId === documentModule?.configurationId,
-          ) ? (
-            <details className="verification-history">
-              <summary>Hardware evidence</summary>
-              <ul>
-                {verifications
-                  .filter(
-                    (record) =>
-                      record.configurationId === documentModule?.configurationId,
-                  )
-                  .slice(-5)
-                  .reverse()
-                  .map((record) => (
-                    <li key={record.id}>
-                      <strong>{record.parameterKey ?? 'Configuration'}</strong>
-                      <span>
-                        {record.hardwareTarget === 'euroburo'
-                          ? 'Euroburo'
-                          : 'ZOIA Pedal'}{' '}
-                        · {record.firmwareVersion} ·{' '}
-                        {new Date(record.verifiedAt).toLocaleDateString()}
-                        {record.verifiedBy ? ` · ${record.verifiedBy}` : ''}
-                      </span>
-                      {record.notes ? <small>{record.notes}</small> : null}
-                    </li>
-                  ))}
-              </ul>
-            </details>
-          ) : null}
-        </section>
-      ) : null}
-
       <section
         className="module-color-section"
         aria-labelledby="module-color-label"
@@ -404,8 +260,11 @@ export function ModuleInspector({
         ) : null}
       </section>
 
-      {experimentalMode && moduleConfiguration?.options?.length ? (
-        <section className="module-options" aria-labelledby="module-options-label">
+      {moduleConfiguration?.options?.length ? (
+        <section
+          className="module-options"
+          aria-labelledby="module-options-label"
+        >
           <h3 id="module-options-label">Configuration options</h3>
           {moduleConfiguration.options.map((option) => (
             <label key={option.key}>
@@ -432,8 +291,8 @@ export function ModuleInspector({
             </label>
           ))}
           <p>
-            Changing an option rebuilds the Experimental Module Configuration.
-            Connections to endpoints removed by the new option are discarded.
+            Changing an option rebuilds the Module Configuration. Connections to
+            endpoints removed by the new option are discarded.
           </p>
         </section>
       ) : null}
@@ -472,31 +331,32 @@ export function ModuleInspector({
               <span>Calibration</span>
               <span />
             </div>
-          {mappings.map((mapping) => {
-            const targetModule = patchDocument?.modules.find(
-              (candidate) => candidate.id === mapping.targetModuleId,
-            )
-            const target = targetModule?.endpoints.find(
-              (candidate) => candidate.id === mapping.targetEndpointId,
-            )
-            const parameter = targetModule?.parameters.find(
-              (candidate) =>
-                candidate.kind === 'parameter' && candidate.key === target?.key,
-            )
-            return (
-              <ControlMappingRow
-                key={`${mapping.id}-${parameter?.rawValue ?? 0}-${mapping.strengthRaw}`}
-                mapping={mapping}
-                targetModule={targetModule}
-                target={target}
-                parameter={parameter}
-                sourceFullScaleValue={sourceFullScaleValue}
-                onSetRange={onSetControlMappingRange}
-                onSetStrength={onSetConnectionStrength}
-                onRemove={onRemoveConnection}
-              />
-            )
-          })}
+            {mappings.map((mapping) => {
+              const targetModule = patchDocument?.modules.find(
+                (candidate) => candidate.id === mapping.targetModuleId,
+              )
+              const target = targetModule?.endpoints.find(
+                (candidate) => candidate.id === mapping.targetEndpointId,
+              )
+              const parameter = targetModule?.parameters.find(
+                (candidate) =>
+                  candidate.kind === 'parameter' &&
+                  candidate.key === target?.key,
+              )
+              return (
+                <ControlMappingRow
+                  key={`${mapping.id}-${parameter?.rawValue ?? 0}-${mapping.strengthRaw}`}
+                  mapping={mapping}
+                  targetModule={targetModule}
+                  target={target}
+                  parameter={parameter}
+                  sourceFullScaleValue={sourceFullScaleValue}
+                  onSetRange={onSetControlMappingRange}
+                  onSetStrength={onSetConnectionStrength}
+                  onRemove={onRemoveConnection}
+                />
+              )
+            })}
           </div>
           <div className="mapping-create">
             <label>
@@ -633,48 +493,13 @@ export function ModuleInspector({
                 canEdit &&
                 parameter.kind === 'parameter' &&
                 originalRawValue !== null
-              const isVerified = verifications.some(
-                (record) =>
-                  record.configurationId === documentModule?.configurationId &&
-                  record.parameterKey === parameter.key &&
-                  matchesProfile(record),
-              )
-
               return (
                 <div
                   className={`parameter-row ${isEditable ? 'is-editable' : ''}`}
                   key={parameter.id}
-                  onContextMenu={(event) => {
-                    if (
-                      !experimentalMode ||
-                      !documentModule?.configurationId ||
-                      parameter.kind !== 'parameter'
-                    )
-                      return
-                    event.preventDefault()
-                    setVerificationMenu({
-                      parameterKey: parameter.key,
-                      parameterName: parameter.name,
-                      x: event.clientX,
-                      y: event.clientY,
-                    })
-                    setVerificationNotes('')
-                  }}
                 >
                   <div className="parameter-row__summary">
-                    <span>
-                      {parameter.name}
-                      {experimentalMode ? (
-                        <small className={`verification-badge ${isVerified ? 'is-verified' : ''}`}>
-                          {isVerified ? <BadgeCheck size={12} /> : null}
-                          {parameter.kind === 'option'
-                            ? 'Option'
-                            : isVerified
-                              ? 'Verified'
-                              : 'Experimental'}
-                        </small>
-                      ) : null}
-                    </span>
+                    <span>{parameter.name}</span>
                     <div>
                       <strong>
                         {isEdited && currentRawValue !== null
@@ -773,50 +598,6 @@ export function ModuleInspector({
           <p className="muted-copy">No audio connections detected.</p>
         ) : null}
       </section>
-
-      {verificationMenu ? (
-        <div
-          className="verification-menu"
-          role="dialog"
-          aria-label={`Verify ${verificationMenu.parameterName}`}
-          style={{
-            left: Math.min(verificationMenu.x, window.innerWidth - 290),
-            top: Math.min(verificationMenu.y, window.innerHeight - 250),
-          }}
-        >
-          <div>
-            <strong>{verificationMenu.parameterName}</strong>
-            <button
-              type="button"
-              aria-label="Close verification menu"
-              onClick={() => setVerificationMenu(null)}
-            >
-              <X size={14} />
-            </button>
-          </div>
-          <p>
-            {profileReady
-              ? `Tested on ${hardwareTarget === 'euroburo' ? 'Euroburo' : 'ZOIA Pedal'} · ${firmwareVersion}`
-              : 'Add the firmware version in the toolbar before verifying.'}
-          </p>
-          <label>
-            <span>TEST NOTES · OPTIONAL</span>
-            <textarea
-              rows={3}
-              value={verificationNotes}
-              onChange={(event) => setVerificationNotes(event.target.value)}
-              placeholder="Loaded, audio passed, CV response correct…"
-            />
-          </label>
-          <button
-            type="button"
-            disabled={!profileReady}
-            onClick={() => void verify(verificationMenu.parameterKey)}
-          >
-            <BadgeCheck size={14} /> Mark parameter verified
-          </button>
-        </div>
-      ) : null}
 
       {canRemove ? (
         <footer className="inspector__actions">

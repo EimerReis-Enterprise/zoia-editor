@@ -1,0 +1,3 @@
+# Report compatibility through GitHub issues
+
+The public editor has no tester accounts or gated experimental mode. Users report app problems or hardware incompatibilities by opening a prefilled public GitHub Compatibility Report; users sign in and submit through GitHub. The report dialog previews its public content and warns that its summary and any attached Patch Document will be public. The report contains sanitized app, hardware, Module Configuration, and patch-hash details, and users may manually attach a Patch Document. Module reports require the hardware model, firmware version, expected behavior, and actual behavior. This keeps the beta anonymous and implementation-free on the hosted service while avoiding automatic upload of patch or binary contents.
